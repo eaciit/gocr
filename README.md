@@ -6,10 +6,12 @@ gocr is a go based OCR module
 To use OCR a trained model need to be build first using Train method. Train read sample of many files from a path. These path will contain many image file with only 2 colors (black over white) and an index file (index.csv) which contains key value to identify file name and characted represent by the file
 
 ie:
+```
 a.gif,a
 b.gif,b
 A1.gif,A
 B1.gif,B
+```
 
 ```go
 pathOfSample := "/usr/eaciit/go/src/github.com/eaciit/gocr/sample"
