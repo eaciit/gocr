@@ -1,10 +1,13 @@
 package gocr
 
 import (
+	"encoding/csv"
+	"encoding/gob"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
+	"io"
 	"os"
 
 	"github.com/anthonynsimon/bild/segment"
@@ -13,16 +16,16 @@ import (
 // Read image in path
 func ReadImage(path string) image.Image {
 	// Read the file
-	infile, err := os.Open(path)
+	file, err := os.Open(path)
 	if err != nil {
 		panic(err)
 	}
 
 	// Close the file later
-	defer infile.Close()
+	defer file.Close()
 
 	// Decode the file to image (will decode any type of image .png, .jpg, .gif)
-	src, _, err := image.Decode(infile)
+	src, _, err := image.Decode(file)
 	if err != nil {
 		panic(err)
 	}
@@ -84,4 +87,69 @@ func ImageToBinaryArray(src image.Image) [][]uint8 {
 func SauvolaBinarization(imageArr [][]uint8) [][]uint8 {
 
 	return nil
+}
+
+func ReadCSV(path string) [][]string {
+	// Read the file
+	file, err := os.Open(path)
+	if err != nil {
+		panic(err)
+	}
+
+	// Close the file later
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	var datas [][]string
+
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			panic(err)
+		}
+
+		datas = append(datas, record)
+	}
+
+	return datas
+}
+
+// Training method
+// The train folder should include index.csv and images that inside the index.csv
+func Train(sampleFolderPath string, modelPath string) {
+
+	indexPath := sampleFolderPath + "/index.csv"
+	indexData := ReadCSV(indexPath)
+
+	// Initialize model data
+	modelData := make(map[string][][]uint8)
+
+	// Read and binarize each image to array 0 and 1
+	for _, elm := range indexData {
+		image := ReadImage(sampleFolderPath + elm[0])
+		binaryImageArray := ImageToBinaryArray(image)
+
+		modelData[elm[1]] = binaryImageArray
+	}
+
+	// Create the model file
+	modelFile, err := os.Create(modelPath + "model.gob")
+	if err != nil {
+		panic(err)
+	}
+
+	// Close the file later
+	defer modelFile.Close()
+
+	// Create encoder
+	encoder := gob.NewEncoder(modelFile)
+	// Write the file
+	if err := encoder.Encode(modelData); err != nil {
+		panic(err)
+	}
+
 }
