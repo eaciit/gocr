@@ -25,6 +25,6 @@ func main() {
 	// binaryArr := gocr.ImageToBinaryArray(image)
 
 	// Load the sample data and save it in .gob file
-	gocr.Train(samplePath+"sample1/", modelPath+"sample1/")
+	gocr.Train(samplePath+"sample2/", modelPath+"sample2/")
 
 }
