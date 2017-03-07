@@ -25,6 +25,10 @@ func main() {
 	// image := gocr.ReadImage(samplePath + "sample1/0.gif")
 	// binaryArr := gocr.ImageToBinaryArray(image)
 
+	// Downloading english font dataset and index.csv
+	d, _ := os.Getwd()
+	gocr.Prepare(d + "/")
+
 	// Load the sample data and save it in .gob file
 	gocr.Train(samplePath+"sample1/", modelPath+"sample1/")
 	// Load the model data and return it
