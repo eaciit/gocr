@@ -3,14 +3,19 @@ package gocr
 import (
 	"encoding/csv"
 	"encoding/gob"
+	"fmt"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"net/http"
 	"os"
+	"path/filepath"
+	"runtime"
 
 	"github.com/anthonynsimon/bild/segment"
+	"github.com/mholt/archiver"
 )
 
 type ModelImage struct {
@@ -21,6 +26,77 @@ type ModelImage struct {
 type Model struct {
 	Name        string
 	ModelImages []ModelImage
+}
+
+// Download the dataset from here and save it in chars74k_dataset/EnglishFnt
+// Also copy index.csv to extracted folder in targetPath
+func Prepare(targetPath string) {
+	// Url for dataset of computer fonts image
+	url := "http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/EnglishFnt.tgz"
+	filePath := targetPath + "english_dataset.tgz"
+
+	fmt.Println("Downloading english font dataset...")
+
+	// Downloading dataset file
+	response, err := http.Get(url)
+	if err != nil {
+		panic(err)
+	}
+	defer response.Body.Close()
+
+	// Create the output file
+	outFile, err := os.Create(filePath)
+	if err != nil {
+		panic(err)
+	}
+	defer outFile.Close()
+
+	// Save to file
+	n, err := io.Copy(outFile, response.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	// Done Downloading
+	fmt.Println(n, " bytes of english dataset successfully downloaded.")
+
+	// Extract the file
+	err = archiver.TarGz.Open(filePath, targetPath)
+	if err != nil {
+		panic(err)
+	}
+
+	extractedPath := targetPath + "English/"
+	fmt.Println("Dataset extracted to ", extractedPath)
+
+	// Get packagePath
+	_, b, _, _ := runtime.Caller(0)
+	packagePath := filepath.Dir(b)
+
+	// Open provided index.csv
+	srcFile, err := os.Open(packagePath + "/train_data/chars74k_dataset/index.csv")
+	if err != nil {
+		panic(err)
+	}
+	defer srcFile.Close()
+
+	// Create destination index.csv
+	destFile, err := os.Create(extractedPath + "index.csv") // creates if file doesn't exist
+	if err != nil {
+		panic(err)
+	}
+	defer destFile.Close()
+
+	// Copy index.csv of the chars74k dataset to target folder
+	_, err = io.Copy(destFile, srcFile) // check first var for number of bytes copied
+	if err != nil {
+		panic(err)
+	}
+
+	err = destFile.Sync()
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Read image in path
