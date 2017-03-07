@@ -13,6 +13,16 @@ import (
 	"github.com/anthonynsimon/bild/segment"
 )
 
+type ModelImage struct {
+	Label string
+	Data  [][]uint8
+}
+
+type Model struct {
+	Name        string
+	ModelImages []ModelImage
+}
+
 // Read image in path
 func ReadImage(path string) image.Image {
 	// Read the file
@@ -125,15 +135,18 @@ func Train(sampleFolderPath string, modelPath string) {
 	indexPath := sampleFolderPath + "/index.csv"
 	indexData := ReadCSV(indexPath)
 
-	// Initialize model data
-	modelData := make(map[string][][]uint8)
+	// Initialize model
+	model := Model{}
 
 	// Read and binarize each image to array 0 and 1
 	for _, elm := range indexData {
 		image := ReadImage(sampleFolderPath + elm[0])
 		binaryImageArray := ImageToBinaryArray(image)
 
-		modelData[elm[1]] = binaryImageArray
+		model.ModelImages = append(model.ModelImages, ModelImage{
+			Label: elm[1],
+			Data:  binaryImageArray,
+		})
 	}
 
 	// Create the model file
@@ -148,7 +161,7 @@ func Train(sampleFolderPath string, modelPath string) {
 	// Create encoder
 	encoder := gob.NewEncoder(modelFile)
 	// Write the file
-	if err := encoder.Encode(modelData); err != nil {
+	if err := encoder.Encode(model); err != nil {
 		panic(err)
 	}
 
