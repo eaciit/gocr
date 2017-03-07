@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/eaciit/gocr"
@@ -25,6 +26,8 @@ func main() {
 	// binaryArr := gocr.ImageToBinaryArray(image)
 
 	// Load the sample data and save it in .gob file
-	gocr.Train(samplePath+"sample2/", modelPath+"sample2/")
-
+	gocr.Train(samplePath+"sample1/", modelPath+"sample1/")
+	// Load the model data and return it
+	model := gocr.ReadModel(modelPath + "sample1/model.gob")
+	fmt.Println(len(model.ModelImages))
 }
