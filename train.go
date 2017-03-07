@@ -136,11 +136,12 @@ func ImageToGraysclaeArray(src image.Image) [][]uint8 {
 	// Initialize 2D array for the gray value of the image (row first)
 	imageArr := make([][]uint8, gray.Bounds().Max.X)
 
-	for x := 0; x < gray.Bounds().Max.X; x++ {
+	// Change the X,Y paradigma to Rows, Column
+	for y := 0; y < gray.Bounds().Max.Y; y++ {
 		// Intialize the column
-		imageArr[x] = make([]uint8, gray.Bounds().Max.Y)
-		for y := 0; y < gray.Bounds().Max.Y; y++ {
-			imageArr[x][y] = gray.GrayAt(x, y).Y
+		imageArr[y] = make([]uint8, gray.Bounds().Max.X)
+		for x := 0; x < gray.Bounds().Max.X; x++ {
+			imageArr[y][x] = gray.GrayAt(x, y).Y
 		}
 	}
 
@@ -153,13 +154,14 @@ func ImageToBinaryArray(src image.Image) [][]uint8 {
 	gray := segment.Threshold(src, 128)
 
 	// Initialize 2D array for the gray value of the image (row first)
-	imageArr := make([][]uint8, gray.Bounds().Max.X)
+	imageArr := make([][]uint8, gray.Bounds().Max.Y)
 
-	for x := 0; x < gray.Bounds().Max.X; x++ {
+	// Change the X,Y paradigma to Rows, Column
+	for y := 0; y < gray.Bounds().Max.Y; y++ {
 		// Intialize the column
-		imageArr[x] = make([]uint8, gray.Bounds().Max.Y)
-		for y := 0; y < gray.Bounds().Max.Y; y++ {
-			imageArr[x][y] = gray.GrayAt(x, y).Y / 255
+		imageArr[y] = make([]uint8, gray.Bounds().Max.X)
+		for x := 0; x < gray.Bounds().Max.X; x++ {
+			imageArr[y][x] = gray.GrayAt(x, y).Y / 255
 		}
 	}
 
