@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"math"
 	"os"
 
 	"github.com/anthonynsimon/bild/segment"
@@ -151,4 +152,26 @@ func MatrixToImage(matrix mat64.Matrix, outPath string) error {
 	png.Encode(outfile, gray)
 
 	return nil
+}
+
+// Resize the array to given height and width using Nearest Neighbor Interpolation
+func NNInterpolation(data *mat64.Dense, outputHeight, outputWidth int) *mat64.Dense {
+
+	r, c := data.Dims()
+
+	xRatio := float64(c) / float64(outputWidth)
+	yRatio := float64(r) / float64(outputHeight)
+
+	output := mat64.NewDense(outputHeight, outputWidth, nil)
+
+	for y := 0; y < outputHeight; y++ {
+		for x := 0; x < outputWidth; x++ {
+			py := int(math.Floor(float64(y) * yRatio))
+			px := int(math.Floor(float64(x) * xRatio))
+
+			output.Set(y, x, data.At(py, px))
+		}
+	}
+
+	return output
 }
