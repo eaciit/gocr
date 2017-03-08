@@ -12,14 +12,13 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/gonum/matrix/mat64"
 	"github.com/mholt/archiver"
 	"github.com/ugorji/go/codec"
 )
 
 type ModelImage struct {
 	Label string
-	Data  *mat64.Dense
+	Data  ImageMatrix
 }
 
 type Model struct {
@@ -149,11 +148,11 @@ func Train(sampleFolderPath string, modelPath string) error {
 			return readErr
 		}
 
-		binaryMatrix := ImageToBinaryMatrix(image)
+		binaryArray := ImageToBinaryArray(image)
 
 		model.ModelImages = append(model.ModelImages, ModelImage{
 			Label: elm[1],
-			Data:  binaryMatrix,
+			Data:  binaryArray,
 		})
 	}
 

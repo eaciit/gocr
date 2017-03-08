@@ -27,10 +27,10 @@ func main() {
 	// gocr.Prepare(d + "/")
 	//
 	// Load the sample data and save it in .gob file
-	// err := gocr.Train(samplePath+"/Sample2/", modelPath+"/Sample2/")
-	// if err != nil {
-	// 	panic(err)
-	// }
+	err := gocr.Train(samplePath+"/Sample2/", modelPath+"/Sample2/")
+	if err != nil {
+		panic(err)
+	}
 
 	// Load the model data and return it
 	model, err := gocr.ReadModel(modelPath + "/Sample2/model.gob")
@@ -47,11 +47,9 @@ func main() {
 	}
 
 	// Convert to binaryArr
-	iA := gocr.ImageToBinaryArray(image)
-	gocr.ImageArrayToImage(iA, d+"/result/result.png")
+	data := gocr.ImageToBinaryArray(image)
+	gocr.ImageArrayToImage(data, d+"/result/result.png")
 	// Convert to gonum Matrix mat64.Dense
-	data := gocr.ImageArrayToMatrix(iA)
-	gocr.MatrixToImage(data, d+"/result/result2.png")
 
 	// Scan and slice
 	_, charss := gocr.LinearScan(data)

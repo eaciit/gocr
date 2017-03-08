@@ -4,7 +4,6 @@ import (
 	"math"
 	"os"
 
-	"github.com/gonum/matrix/mat64"
 	"github.com/ugorji/go/codec"
 )
 
@@ -41,7 +40,7 @@ func ReadModel(path string) (Model, error) {
 // Find Marker of DarkArea from given Matrix
 // Direction 0 means it will iterate every rows
 // Direction 1 means it will iterate every columns
-func MarkersOfMatrix(data *mat64.Dense, threshold float64, direction int) []Marker {
+func MarkersOfMatrix(data ImageMatrix, threshold float64, direction int) []Marker {
 	r, c := data.Dims()
 	markers := []Marker{}
 	startMarker := -1
@@ -57,9 +56,9 @@ func MarkersOfMatrix(data *mat64.Dense, threshold float64, direction int) []Mark
 		var colAvg float64 = 1
 
 		if direction == 0 {
-			colAvg = mat64.Sum(data.RowView(i)) / float64(c)
+			colAvg = float64(data.Row(i).Sum()) / float64(c)
 		} else {
-			colAvg = mat64.Sum(data.ColView(i)) / float64(r)
+			colAvg = float64(data.Col(i).Sum()) / float64(r)
 		}
 
 		if colAvg >= threshold {
@@ -83,11 +82,11 @@ func MarkersOfMatrix(data *mat64.Dense, threshold float64, direction int) []Mark
 
 // Scan the DarkArea and return it as []mat64.Dense for each line
 // And [][]mat64.Dense for each characther
-func LinearScan(data *mat64.Dense) ([]*mat64.Dense, [][]*mat64.Dense) {
+func LinearScan(data ImageMatrix) ([]ImageMatrix, [][]ImageMatrix) {
 	r, c := data.Dims()
 
 	markers := MarkersOfMatrix(data, 0.9, 0)
-	lines := []*mat64.Dense{}
+	lines := []ImageMatrix{}
 
 	rowPadding := 5
 	for _, marker := range markers {
@@ -107,15 +106,15 @@ func LinearScan(data *mat64.Dense) ([]*mat64.Dense, [][]*mat64.Dense) {
 		}
 
 		line := data.Slice(start, end, 0, c)
-		lines = append(lines, mat64.DenseCopyOf(line))
+		lines = append(lines, line)
 	}
 
-	charss := [][]*mat64.Dense{}
+	charss := [][]ImageMatrix{}
 
 	for _, line := range lines {
 		markers := MarkersOfMatrix(line, 0.97, 1)
 		r, c := line.Dims()
-		chars := []*mat64.Dense{}
+		chars := []ImageMatrix{}
 
 		columnPadding := 2
 		for _, marker := range markers {
@@ -135,7 +134,7 @@ func LinearScan(data *mat64.Dense) ([]*mat64.Dense, [][]*mat64.Dense) {
 			}
 
 			char := line.Slice(0, r, start, end)
-			chars = append(chars, mat64.DenseCopyOf(char))
+			chars = append(chars, char)
 		}
 
 		charss = append(charss, chars)
@@ -145,7 +144,7 @@ func LinearScan(data *mat64.Dense) ([]*mat64.Dense, [][]*mat64.Dense) {
 }
 
 // Predict the given image Dense to given model
-func Predict(matrix *mat64.Dense, model *Model) string {
+func Predict(matrix ImageMatrix, model *Model) string {
 
 	// kNN with k = 1
 	min := math.MaxFloat64
