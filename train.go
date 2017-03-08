@@ -2,7 +2,6 @@ package gocr
 
 import (
 	"encoding/csv"
-	"encoding/gob"
 	"fmt"
 	_ "image/gif"
 	_ "image/jpeg"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/gonum/matrix/mat64"
 	"github.com/mholt/archiver"
+	"github.com/ugorji/go/codec"
 )
 
 type ModelImage struct {
@@ -167,7 +167,8 @@ func Train(sampleFolderPath string, modelPath string) error {
 	defer modelFile.Close()
 
 	// Create encoder
-	encoder := gob.NewEncoder(modelFile)
+	encoder := codec.NewEncoder(modelFile, new(codec.CborHandle))
+
 	// Write the file
 	if err := encoder.Encode(model); err != nil {
 		return err

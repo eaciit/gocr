@@ -1,10 +1,11 @@
 package gocr
 
 import (
-	"encoding/gob"
+	"math"
 	"os"
 
 	"github.com/gonum/matrix/mat64"
+	"github.com/ugorji/go/codec"
 )
 
 type Marker struct {
@@ -28,7 +29,7 @@ func ReadModel(path string) (Model, error) {
 	defer file.Close()
 
 	// Initialize decoder and empty Model
-	decoder := gob.NewDecoder(file)
+	decoder := codec.NewDecoder(file, new(codec.CborHandle))
 	model := Model{}
 
 	// Decode the file
@@ -141,4 +142,30 @@ func LinearScan(data *mat64.Dense) ([]*mat64.Dense, [][]*mat64.Dense) {
 	}
 
 	return lines, charss
+}
+
+// Predict the given image Dense to given model
+func Predict(matrix *mat64.Dense, model *Model) string {
+
+	// kNN with k = 1
+	min := math.MaxFloat64
+	predictedLabel := ""
+	resizedMatrix := matrix
+	mr, mc := model.ModelImages[0].Data.Dims()
+	tr, tc := matrix.Dims()
+
+	if mr != tr || mc != tc {
+		resizedMatrix = NNInterpolation(matrix, mr, mc)
+	}
+
+	for _, modelImage := range model.ModelImages {
+		distance := EuclideanDistance(resizedMatrix, modelImage.Data)
+
+		if min > distance {
+			min = distance
+			predictedLabel = modelImage.Label
+		}
+	}
+
+	return predictedLabel
 }
