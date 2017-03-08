@@ -31,7 +31,7 @@ func ReadImage(path string) (image.Image, error) {
 	return src, nil
 }
 
-//Convert image to grayscale 2D array
+// Convert image to grayscale 2D array
 func ImageToGraysclaeArray(src image.Image) [][]uint8 {
 	// Convert the image to Grayscale
 	bounds := src.Bounds()
@@ -61,6 +61,7 @@ func ImageToGraysclaeArray(src image.Image) [][]uint8 {
 	return imageArr
 }
 
+// Convert image to binary array
 func ImageToBinaryArray(src image.Image) [][]uint8 {
 	// FIXME: still finding the best Threshold
 	gray := segment.Threshold(src, 128)
@@ -78,6 +79,25 @@ func ImageToBinaryArray(src image.Image) [][]uint8 {
 	}
 
 	return imageArr
+}
+
+// Convert image to binary matrix
+func ImageToBinaryMatrix(src image.Image) *mat64.Dense {
+	// FIXME: still finding the best Threshold
+	gray := segment.Threshold(src, 128)
+
+	// Initialize 2D array for the gray value of the image (row first)
+	matrix := mat64.NewDense(gray.Bounds().Max.Y, gray.Bounds().Max.X, nil)
+
+	// Change the X,Y paradigma to Rows, Column
+	for y := 0; y < gray.Bounds().Max.Y; y++ {
+
+		for x := 0; x < gray.Bounds().Max.X; x++ {
+			matrix.Set(y, x, float64(gray.GrayAt(x, y).Y/255))
+		}
+	}
+
+	return matrix
 }
 
 // Binarize the given imageArr using
