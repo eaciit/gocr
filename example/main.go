@@ -21,41 +21,43 @@ var (
 	}() + "/../model/"
 )
 
-type Marker struct {
-	Start int
-	End   int
-}
-
-func (m Marker) thickness() int {
-	return m.End - m.Start
-}
-
 func main() {
-	// image := gocr.ReadImage(samplePath + "sample1/0.gif")
-	// binaryArr := gocr.ImageToBinaryArray(image)
-
 	// Downloading english font dataset and index.csv
 	d, _ := os.Getwd()
 	// gocr.Prepare(d + "/")
 	//
 	// // Load the sample data and save it in .gob file
 	// gocr.Train(samplePath+"sample1/", modelPath+"sample1/")
+	//
 	// // Load the model data and return it
-	// model := gocr.ReadModel(modelPath + "sample1/model.gob")
+	// model, err := gocr.ReadModel(modelPath + "sample1/model.gob")
+	// if err != nil {
+	// 	panic(err)
+	// }
 	// fmt.Println(len(model.ModelImages))
 
-	image := gocr.ReadImage(d + "/imagetext_3.png")
+	// Read the image
+	image, err := gocr.ReadImage(d + "/imagetext_3.png")
+	if err != nil {
+		panic(err)
+	}
+
+	// Convert to binaryArr
 	iA := gocr.ImageToBinaryArray(image)
 	gocr.ImageArrayToImage(iA, d+"/result/result.png")
+	// Convert to gonum Matrix mat64.Dense
 	data := gocr.ImageArrayToMatrix(iA)
 	gocr.MatrixToImage(data, d+"/result/result2.png")
 
+	// Scan and slice
 	lines, charss := gocr.LinearScan(data)
 
+	// Save each line to image
 	for i, line := range lines {
 		gocr.MatrixToImage(line, d+"/result/line_"+strconv.Itoa(i)+".png")
 	}
 
+	// Save each char to image
 	for i, chars := range charss {
 		for j, char := range chars {
 			gocr.MatrixToImage(char, d+"/result/char_"+strconv.Itoa(i)+strconv.Itoa(j)+".png")

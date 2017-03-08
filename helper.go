@@ -11,11 +11,11 @@ import (
 )
 
 // Read image in path
-func ReadImage(path string) image.Image {
+func ReadImage(path string) (image.Image, error) {
 	// Read the file
 	file, err := os.Open(path)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// Close the file later
@@ -24,10 +24,10 @@ func ReadImage(path string) image.Image {
 	// Decode the file to image (will decode any type of image .png, .jpg, .gif)
 	src, _, err := image.Decode(file)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return src
+	return src, nil
 }
 
 //Convert image to grayscale 2D array
@@ -102,7 +102,7 @@ func ImageArrayToMatrix(imageArray [][]uint8) *mat64.Dense {
 	return mat64.NewDense(w, h, fA)
 }
 
-func ImageArrayToImage(imageArray [][]uint8, outPath string) {
+func ImageArrayToImage(imageArray [][]uint8, outPath string) error {
 	r := len(imageArray)
 	c := len(imageArray[0])
 
@@ -119,14 +119,16 @@ func ImageArrayToImage(imageArray [][]uint8, outPath string) {
 	// Encode the grayscale image to the output file
 	outfile, err := os.Create(outPath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer outfile.Close()
 
 	png.Encode(outfile, gray)
+
+	return nil
 }
 
-func MatrixToImage(matrix mat64.Matrix, outPath string) {
+func MatrixToImage(matrix mat64.Matrix, outPath string) error {
 	h, w := matrix.Dims()
 
 	// Change row, column paradigman to x, y
@@ -142,9 +144,11 @@ func MatrixToImage(matrix mat64.Matrix, outPath string) {
 	// Encode the grayscale image to the output file
 	outfile, err := os.Create(outPath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer outfile.Close()
 
 	png.Encode(outfile, gray)
+
+	return nil
 }

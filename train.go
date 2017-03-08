@@ -28,7 +28,7 @@ type Model struct {
 
 // Download the dataset from here and save it in chars74k_dataset/EnglishFnt
 // Also copy index.csv to extracted folder in targetPath
-func Prepare(targetPath string) {
+func Prepare(targetPath string) error {
 	// Url for dataset of computer fonts image
 	url := "http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/EnglishFnt.tgz"
 	filePath := targetPath + "english_dataset.tgz"
@@ -38,21 +38,21 @@ func Prepare(targetPath string) {
 	// Downloading dataset file
 	response, err := http.Get(url)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer response.Body.Close()
 
 	// Create the output file
 	outFile, err := os.Create(filePath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer outFile.Close()
 
 	// Save to file
 	n, err := io.Copy(outFile, response.Body)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Done Downloading
@@ -61,7 +61,7 @@ func Prepare(targetPath string) {
 	// Extract the file
 	err = archiver.TarGz.Open(filePath, targetPath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	extractedPath := targetPath + "English/"
@@ -74,34 +74,36 @@ func Prepare(targetPath string) {
 	// Open provided index.csv
 	srcFile, err := os.Open(packagePath + "/train_data/chars74k_dataset/index.csv")
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer srcFile.Close()
 
 	// Create destination index.csv
 	destFile, err := os.Create(extractedPath + "index.csv") // creates if file doesn't exist
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer destFile.Close()
 
 	// Copy index.csv of the chars74k dataset to target folder
 	_, err = io.Copy(destFile, srcFile) // check first var for number of bytes copied
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err = destFile.Sync()
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
 
-func ReadCSV(path string) [][]string {
+func ReadCSV(path string) ([][]string, error) {
 	// Read the file
 	file, err := os.Open(path)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// Close the file later
@@ -117,28 +119,35 @@ func ReadCSV(path string) [][]string {
 		}
 
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		datas = append(datas, record)
 	}
 
-	return datas
+	return datas, nil
 }
 
 // Training method
 // The train folder should include index.csv and images that inside the index.csv
-func Train(sampleFolderPath string, modelPath string) {
+func Train(sampleFolderPath string, modelPath string) error {
 
 	indexPath := sampleFolderPath + "/index.csv"
-	indexData := ReadCSV(indexPath)
+	indexData, err := ReadCSV(indexPath)
+	if err != nil {
+		return err
+	}
 
 	// Initialize model
 	model := Model{}
 
 	// Read and binarize each image to array 0 and 1
 	for _, elm := range indexData {
-		image := ReadImage(sampleFolderPath + elm[0])
+		image, readErr := ReadImage(sampleFolderPath + elm[0])
+		if err != nil {
+			return readErr
+		}
+
 		binaryImageArray := ImageToBinaryArray(image)
 
 		model.ModelImages = append(model.ModelImages, ModelImage{
@@ -150,7 +159,7 @@ func Train(sampleFolderPath string, modelPath string) {
 	// Create the model file
 	modelFile, err := os.Create(modelPath + "model.gob")
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Close the file later
@@ -160,7 +169,8 @@ func Train(sampleFolderPath string, modelPath string) {
 	encoder := gob.NewEncoder(modelFile)
 	// Write the file
 	if err := encoder.Encode(model); err != nil {
-		panic(err)
+		return err
 	}
 
+	return nil
 }

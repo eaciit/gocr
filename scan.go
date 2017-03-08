@@ -17,11 +17,11 @@ func (m Marker) thickness() int {
 }
 
 // Read the model from a file and return Model
-func ReadModel(path string) Model {
+func ReadModel(path string) (Model, error) {
 	// Open the file
 	file, err := os.Open(path)
 	if err != nil {
-		panic(err)
+		return Model{}, err
 	}
 
 	// Close the file later
@@ -34,7 +34,7 @@ func ReadModel(path string) Model {
 	// Decode the file
 	decoder.Decode(&model)
 
-	return model
+	return model, nil
 }
 
 // Find Marker of DarkArea from given Matrix
@@ -80,6 +80,8 @@ func MarkersOfMatrix(data *mat64.Dense, threshold float64, direction int) []Mark
 	return markers
 }
 
+// Scan the DarkArea and return it as []mat64.Dense for each line
+// And [][]mat64.Dense for each characther
 func LinearScan(data *mat64.Dense) ([]*mat64.Dense, [][]*mat64.Dense) {
 	r, c := data.Dims()
 
