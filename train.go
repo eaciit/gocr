@@ -13,12 +13,13 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/gonum/matrix/mat64"
 	"github.com/mholt/archiver"
 )
 
 type ModelImage struct {
 	Label string
-	Data  [][]uint8
+	Data  *mat64.Dense
 }
 
 type Model struct {
@@ -64,7 +65,7 @@ func Prepare(targetPath string) error {
 		return err
 	}
 
-	extractedPath := targetPath + "English/"
+	extractedPath := targetPath + "English/Fnt/"
 	fmt.Println("Dataset extracted to ", extractedPath)
 
 	// Get packagePath
@@ -148,11 +149,11 @@ func Train(sampleFolderPath string, modelPath string) error {
 			return readErr
 		}
 
-		binaryImageArray := ImageToBinaryArray(image)
+		binaryMatrix := ImageToBinaryMatrix(image)
 
 		model.ModelImages = append(model.ModelImages, ModelImage{
 			Label: elm[1],
-			Data:  binaryImageArray,
+			Data:  binaryMatrix,
 		})
 	}
 
