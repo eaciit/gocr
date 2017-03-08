@@ -175,3 +175,24 @@ func NNInterpolation(data *mat64.Dense, outputHeight, outputWidth int) *mat64.De
 
 	return output
 }
+
+// Find the distance of 2 give Dense using Euclidean Distance
+func EuclideanDistance(m1, m2 *mat64.Dense) float64 {
+
+	r1, c1 := m1.Dims()
+	r2, c2 := m2.Dims()
+
+	if r1 != r2 || c1 != c2 {
+		panic("Dimension mismatch")
+	}
+
+	var sum float64 = 0.0
+
+	for y := 0; y < r1; y++ {
+		for x := 0; x < c1; x++ {
+			sum += math.Pow(m1.At(y, x)-m2.At(y, x), 2)
+		}
+	}
+
+	return math.Sqrt(sum)
+}
