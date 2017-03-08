@@ -11,6 +11,8 @@ import (
 	"github.com/gonum/matrix/mat64"
 )
 
+const THRESHOLD_VALUE = 128
+
 // Read image in path
 func ReadImage(path string) (image.Image, error) {
 	// Read the file
@@ -63,8 +65,7 @@ func ImageToGraysclaeArray(src image.Image) [][]uint8 {
 
 // Convert image to binary array
 func ImageToBinaryArray(src image.Image) [][]uint8 {
-	// FIXME: still finding the best Threshold
-	gray := segment.Threshold(src, 128)
+	gray := segment.Threshold(src, THRESHOLD_VALUE)
 
 	// Initialize 2D array for the gray value of the image (row first)
 	imageArr := make([][]uint8, gray.Bounds().Max.Y)
@@ -83,8 +84,7 @@ func ImageToBinaryArray(src image.Image) [][]uint8 {
 
 // Convert image to binary matrix
 func ImageToBinaryMatrix(src image.Image) *mat64.Dense {
-	// FIXME: still finding the best Threshold
-	gray := segment.Threshold(src, 128)
+	gray := segment.Threshold(src, THRESHOLD_VALUE)
 
 	// Initialize 2D array for the gray value of the image (row first)
 	matrix := mat64.NewDense(gray.Bounds().Max.Y, gray.Bounds().Max.X, nil)
