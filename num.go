@@ -178,3 +178,17 @@ func Im2col(data []*mat64.Dense, kernel [][]*mat64.Dense) (*mat64.Dense, *mat64.
 
 	return ko, do, result
 }
+
+func Reshape2D(m *mat64.Dense, r, c int) *mat64.Dense {
+
+	_, sc := m.Dims()
+	o := mat64.NewDense(r, c, nil)
+
+	for i := 0; i < r; i++ {
+		for j := 0; j < c; j++ {
+			o.Set(i, j, m.At(i/c, (i*c+j)%sc))
+		}
+	}
+
+	return o
+}
