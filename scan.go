@@ -1,6 +1,7 @@
 package gocr
 
 import (
+	"fmt"
 	"math"
 	"os"
 
@@ -40,7 +41,6 @@ func NewScannerFromFile(path string) *Scanner {
 // Predict the given image Dense to given model using kNN with k = 1
 func (s *Scanner) Predict(matrix ImageMatrix) string {
 
-	min := math.MaxFloat64
 	predictedLabel := ""
 	resizedMatrix := matrix
 	mr, mc := s.model.ModelImages[0].Data.Dims()
@@ -49,20 +49,22 @@ func (s *Scanner) Predict(matrix ImageMatrix) string {
 	if tr > tc {
 		left := (tr - tc) / 2
 		right := tr - tc - left
-		resizedMatrix = resizedMatrix.Pad(0, 0, left, right, 1)
+		resizedMatrix = resizedMatrix.Pad(0, 0, left, right, 255)
 	} else if tc > tr {
 		top := (tc - tr) / 2
 		bottom := tc - tr - top
-		resizedMatrix = resizedMatrix.Pad(top, bottom, 0, 0, 1)
+		resizedMatrix = resizedMatrix.Pad(top, bottom, 0, 0, 255)
 	}
 
 	if mr != tr || mc != tc {
 		resizedMatrix = matrix.NNInterpolation(mr, mc)
 	}
 
+	min := math.MaxFloat64
 	for _, modelImage := range s.model.ModelImages {
 		distance := EuclideanDistance(resizedMatrix, modelImage.Data)
 
+		fmt.Println(modelImage.Label, distance, " ")
 		if min > distance {
 			min = distance
 			predictedLabel = modelImage.Label
@@ -135,7 +137,7 @@ func MarkersOfMatrix(data ImageMatrix, threshold float64, direction int) []Marke
 func LinearScan(data ImageMatrix) ([]ImageMatrix, [][]ImageMatrix) {
 	r, c := data.Dims()
 
-	markers := MarkersOfMatrix(data, 0.9, 0)
+	markers := MarkersOfMatrix(data, 0.9*255, 0)
 	lines := []ImageMatrix{}
 
 	rowPadding := 5
@@ -162,7 +164,7 @@ func LinearScan(data ImageMatrix) ([]ImageMatrix, [][]ImageMatrix) {
 	charss := [][]ImageMatrix{}
 
 	for _, line := range lines {
-		markers := MarkersOfMatrix(line, 0.97, 1)
+		markers := MarkersOfMatrix(line, 0.95*255, 1)
 		r, c := line.Dims()
 		chars := []ImageMatrix{}
 

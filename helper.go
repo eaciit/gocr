@@ -30,7 +30,7 @@ func ReadImage(path string) (image.Image, error) {
 }
 
 // Convert image to grayscale 2D array
-func ImageToGraysclaeArray(src image.Image) [][]uint8 {
+func ImageToGraysclaeArray(src image.Image) ImageMatrix {
 	bounds := src.Bounds()
 	w, h := bounds.Max.X, bounds.Max.Y
 	gray := image.NewGray(image.Rect(0, 0, w, h))
@@ -42,10 +42,9 @@ func ImageToGraysclaeArray(src image.Image) [][]uint8 {
 		}
 	}
 
-	imageArr := make([][]uint8, gray.Bounds().Max.X)
+	imageArr := NewImageMatrix(gray.Bounds().Max.Y, gray.Bounds().Max.X)
 
 	for y := 0; y < gray.Bounds().Max.Y; y++ {
-		imageArr[y] = make([]uint8, gray.Bounds().Max.X)
 		for x := 0; x < gray.Bounds().Max.X; x++ {
 			imageArr[y][x] = gray.GrayAt(x, y).Y
 		}
@@ -55,15 +54,13 @@ func ImageToGraysclaeArray(src image.Image) [][]uint8 {
 }
 
 // Convert image to binary array
-func ImageToBinaryArray(src image.Image) [][]uint8 {
+func ImageToBinaryArray(src image.Image) ImageMatrix {
 	gray := segment.Threshold(src, THRESHOLD_VALUE)
-
-	imageArr := make([][]uint8, gray.Bounds().Max.Y)
+	imageArr := NewImageMatrix(gray.Bounds().Max.Y, gray.Bounds().Max.X)
 
 	for y := 0; y < gray.Bounds().Max.Y; y++ {
-		imageArr[y] = make([]uint8, gray.Bounds().Max.X)
 		for x := 0; x < gray.Bounds().Max.X; x++ {
-			imageArr[y][x] = gray.GrayAt(x, y).Y / 255
+			imageArr[y][x] = gray.GrayAt(x, y).Y
 		}
 	}
 
@@ -74,13 +71,13 @@ func ImageToBinaryArray(src image.Image) [][]uint8 {
 // Best algorithm based on this paper https://pdfs.semanticscholar.org/6347/5461213fdaa24e418c33454c72bdbbe8f8b4.pdf is Sauvola
 // Sauvola Reference: http://www.mediateam.oulu.fi/publications/pdf/24.p
 // TODO: Implement Sauvola algorithm
-func SauvolaBinarization(imageArr [][]uint8) [][]uint8 {
+func SauvolaBinarization(imageArr ImageMatrix) ImageMatrix {
 
 	return nil
 }
 
-// Convert imageArray to Image and save it to given path
-func ImageArrayToImage(imageArray [][]uint8, outPath string) error {
+// Convert ImageMatrix to Image and save it to given path
+func ImageMatrixToImage(imageArray ImageMatrix, outPath string) error {
 	r := len(imageArray)
 	c := len(imageArray[0])
 
@@ -88,7 +85,7 @@ func ImageArrayToImage(imageArray [][]uint8, outPath string) error {
 	for x := 0; x < c; x++ {
 		for y := 0; y < r; y++ {
 			grayColor := color.Gray{}
-			grayColor.Y = imageArray[y][x] * 255
+			grayColor.Y = imageArray[y][x]
 			gray.Set(x, y, grayColor)
 		}
 	}

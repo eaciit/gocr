@@ -26,6 +26,20 @@ type Model struct {
 	ModelImages []ModelImage
 }
 
+type Groups struct {
+	datas map[string]ImageMatrixs
+}
+
+func (g *Groups) isClassExist(class string) bool {
+	for key, _ := range g.datas {
+		if key == class {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Download the dataset from here and save it in chars74k_dataset/EnglishFnt
 // Also copy index.csv to extracted folder in targetPath
 func Prepare(targetPath string) error {
@@ -79,14 +93,14 @@ func Prepare(targetPath string) error {
 	defer srcFile.Close()
 
 	// Create destination index.csv
-	destFile, err := os.Create(extractedPath + "index.csv") // creates if file doesn't exist
+	destFile, err := os.Create(extractedPath + "index.csv")
 	if err != nil {
 		return err
 	}
 	defer destFile.Close()
 
 	// Copy index.csv of the chars74k dataset to target folder
-	_, err = io.Copy(destFile, srcFile) // check first var for number of bytes copied
+	_, err = io.Copy(destFile, srcFile)
 	if err != nil {
 		return err
 	}
@@ -99,14 +113,12 @@ func Prepare(targetPath string) error {
 	return nil
 }
 
+// Read CSV from given path and return array [][]string
 func ReadCSV(path string) ([][]string, error) {
-	// Read the file
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
-
-	// Close the file later
 	defer file.Close()
 
 	reader := csv.NewReader(file)
@@ -128,7 +140,7 @@ func ReadCSV(path string) ([][]string, error) {
 	return datas, nil
 }
 
-// Training method
+// Train read the image file from sample path convert it to model and save it in given model path
 // The train folder should include index.csv and images that inside the index.csv
 func Train(sampleFolderPath string, modelPath string) error {
 
@@ -138,10 +150,8 @@ func Train(sampleFolderPath string, modelPath string) error {
 		return err
 	}
 
-	// Initialize model
 	model := Model{}
 
-	// Read and binarize each image to array 0 and 1
 	for _, elm := range indexData {
 		image, readErr := ReadImage(sampleFolderPath + elm[0])
 		if err != nil {
@@ -156,19 +166,64 @@ func Train(sampleFolderPath string, modelPath string) error {
 		})
 	}
 
-	// Create the model file
 	modelFile, err := os.Create(modelPath + "model.gob")
 	if err != nil {
 		return err
 	}
-
-	// Close the file later
 	defer modelFile.Close()
 
-	// Create encoder
 	encoder := codec.NewEncoder(modelFile, new(codec.CborHandle))
+	if err := encoder.Encode(model); err != nil {
+		return err
+	}
 
-	// Write the file
+	return nil
+}
+
+func TrainAverage(sampleFolderPath string, modelPath string) error {
+	indexPath := sampleFolderPath + "/index.csv"
+	indexData, err := ReadCSV(indexPath)
+	if err != nil {
+		return err
+	}
+
+	groups := Groups{
+		datas: make(map[string]ImageMatrixs),
+	}
+
+	for _, elm := range indexData {
+		image, readErr := ReadImage(sampleFolderPath + elm[0])
+		if err != nil {
+			return readErr
+		}
+
+		binaryArray := ImageToGraysclaeArray(image)
+
+		if groups.isClassExist(elm[1]) {
+			groups.datas[elm[1]] = append(groups.datas[elm[1]], binaryArray)
+		} else {
+			groups.datas[elm[1]] = ImageMatrixs{binaryArray}
+		}
+
+		println(elm[1])
+	}
+
+	model := Model{}
+
+	for key, value := range groups.datas {
+		model.ModelImages = append(model.ModelImages, ModelImage{
+			Label: key,
+			Data:  value.Average(),
+		})
+	}
+
+	modelFile, err := os.Create(modelPath + "model.gob")
+	if err != nil {
+		return err
+	}
+	defer modelFile.Close()
+
+	encoder := codec.NewEncoder(modelFile, new(codec.CborHandle))
 	if err := encoder.Encode(model); err != nil {
 		return err
 	}

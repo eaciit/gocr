@@ -98,6 +98,27 @@ func (i ImageMatrix) Col(c int) ImageVector {
 	return v
 }
 
+type ImageMatrixs []ImageMatrix
+
+func (is ImageMatrixs) Average() ImageMatrix {
+	l := len(is)
+	sr, sc := is[0].Dims()
+	output := NewImageMatrix(sr, sc)
+
+	for r := 0; r < sr; r++ {
+		for c := 0; c < sc; c++ {
+			sum := 0
+			for i := 0; i < l; i++ {
+				sum += int(is[i][r][c])
+			}
+
+			output[r][c] = uint8(sum / l)
+		}
+	}
+
+	return output
+}
+
 func NewImageVector(l int) ImageVector {
 	return make([]uint8, l)
 }
