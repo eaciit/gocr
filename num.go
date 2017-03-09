@@ -1,6 +1,10 @@
 package gocr
 
-import "math"
+import (
+	"math"
+
+	"github.com/gonum/matrix/mat64"
+)
 
 type ImageMatrix [][]uint8
 
@@ -131,4 +135,46 @@ func (v ImageVector) Sum() uint64 {
 	}
 
 	return sum
+}
+
+func sizeAfterConvolve(ds, ks, p, s int) int {
+	return ((ds - ks + 2*p) / s) + 1
+}
+
+func Im2col(data []*mat64.Dense, kernel [][]*mat64.Dense) (*mat64.Dense, *mat64.Dense, *mat64.Dense) {
+
+	kn := len(kernel)
+	kd := len(kernel[0])
+	kr, kc := kernel[0][0].Dims()
+	knr := kn
+	knc := kc * kr * kd
+
+	ko := mat64.NewDense(knr, knc, nil)
+
+	for i := 0; i < knr; i++ {
+		for j := 0; j < knc; j++ {
+			v := kernel[i][j/(kr*kc)].At(j/kc%kr, j%kc)
+			ko.Set(i, j, v)
+		}
+	}
+
+	dd := len(data)
+	_, dc := data[0].Dims()
+	dnr := knc
+	pl := sizeAfterConvolve(dc, kc, 0, 1)
+	dnc := dd * pl
+
+	do := mat64.NewDense(dnr, dnc, nil)
+
+	for i := 0; i < dnr; i++ {
+		for j := 0; j < dnc; j++ {
+			v := data[i/(dnr/dd)].At(i/kc%dd+j/pl, i%kc+j%pl)
+			do.Set(i, j, v)
+		}
+	}
+
+	result := mat64.NewDense(knr, dnc, nil)
+	result.Mul(ko, do)
+
+	return ko, do, result
 }
