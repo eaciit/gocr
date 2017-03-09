@@ -16,22 +16,62 @@ func (m Marker) thickness() int {
 	return m.End - m.Start
 }
 
-// Read the model from a file and return Model
+type Scanner struct {
+	model *Model
+}
+
+func NewScanner(model *Model) *Scanner {
+	return &Scanner{
+		model: model,
+	}
+}
+
+func NewScannerFromFile(path string) *Scanner {
+	model, err := ReadModel(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return &Scanner{
+		model: &model,
+	}
+}
+
+// Predict the given image Dense to given model using kNN with k = 1
+func (s *Scanner) Predict(matrix ImageMatrix) string {
+
+	min := math.MaxFloat64
+	predictedLabel := ""
+	resizedMatrix := matrix
+	mr, mc := s.model.ModelImages[0].Data.Dims()
+	tr, tc := matrix.Dims()
+
+	if mr != tr || mc != tc {
+		resizedMatrix = NNInterpolation(matrix, mr, mc)
+	}
+
+	for _, modelImage := range s.model.ModelImages {
+		distance := EuclideanDistance(resizedMatrix, modelImage.Data)
+
+		if min > distance {
+			min = distance
+			predictedLabel = modelImage.Label
+		}
+	}
+
+	return predictedLabel
+}
+
+// Read the model from a file and return the Model
 func ReadModel(path string) (Model, error) {
-	// Open the file
 	file, err := os.Open(path)
 	if err != nil {
 		return Model{}, err
 	}
-
-	// Close the file later
 	defer file.Close()
 
-	// Initialize decoder and empty Model
 	decoder := codec.NewDecoder(file, new(codec.CborHandle))
 	model := Model{}
-
-	// Decode the file
 	decoder.Decode(&model)
 
 	return model, nil
@@ -141,30 +181,4 @@ func LinearScan(data ImageMatrix) ([]ImageMatrix, [][]ImageMatrix) {
 	}
 
 	return lines, charss
-}
-
-// Predict the given image Dense to given model
-func Predict(matrix ImageMatrix, model *Model) string {
-
-	// kNN with k = 1
-	min := math.MaxFloat64
-	predictedLabel := ""
-	resizedMatrix := matrix
-	mr, mc := model.ModelImages[0].Data.Dims()
-	tr, tc := matrix.Dims()
-
-	if mr != tr || mc != tc {
-		resizedMatrix = NNInterpolation(matrix, mr, mc)
-	}
-
-	for _, modelImage := range model.ModelImages {
-		distance := EuclideanDistance(resizedMatrix, modelImage.Data)
-
-		if min > distance {
-			min = distance
-			predictedLabel = modelImage.Label
-		}
-	}
-
-	return predictedLabel
 }

@@ -66,9 +66,11 @@ func main() {
 	// 	}
 	// }
 
+	s := gocr.NewScanner(&model)
+
 	for _, chars := range charss {
 		for _, char := range chars {
-			fmt.Print(gocr.Predict(char, &model))
+			fmt.Print(s.Predict(char))
 		}
 
 		fmt.Println("")
