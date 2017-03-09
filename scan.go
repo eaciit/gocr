@@ -44,10 +44,20 @@ func (s *Scanner) Predict(matrix ImageMatrix) string {
 	predictedLabel := ""
 	resizedMatrix := matrix
 	mr, mc := s.model.ModelImages[0].Data.Dims()
-	tr, tc := matrix.Dims()
+	tr, tc := resizedMatrix.Dims()
+
+	if tr > tc {
+		left := (tr - tc) / 2
+		right := tr - tc - left
+		resizedMatrix = resizedMatrix.Pad(0, 0, left, right, 1)
+	} else if tc > tr {
+		top := (tc - tr) / 2
+		bottom := tc - tr - top
+		resizedMatrix = resizedMatrix.Pad(top, bottom, 0, 0, 1)
+	}
 
 	if mr != tr || mc != tc {
-		resizedMatrix = NNInterpolation(matrix, mr, mc)
+		resizedMatrix = matrix.NNInterpolation(mr, mc)
 	}
 
 	for _, modelImage := range s.model.ModelImages {
