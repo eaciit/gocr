@@ -141,7 +141,7 @@ func sizeAfterConvolve(ds, ks, p, s int) int {
 	return ((ds - ks + 2*p) / s) + 1
 }
 
-func Im2col(data []*mat64.Dense, kernel [][]*mat64.Dense) (*mat64.Dense, *mat64.Dense, *mat64.Dense) {
+func Im2col(x []*mat64.Dense, kernel [][]*mat64.Dense, p, s int) (*mat64.Dense, *mat64.Dense) {
 
 	kn := len(kernel)
 	kd := len(kernel[0])
@@ -158,35 +158,32 @@ func Im2col(data []*mat64.Dense, kernel [][]*mat64.Dense) (*mat64.Dense, *mat64.
 		}
 	}
 
-	dd := len(data)
-	_, dc := data[0].Dims()
+	dd := len(x)
+	_, dc := x[0].Dims()
 	dnr := knc
-	pl := sizeAfterConvolve(dc, kc, 0, 1)
+	pl := sizeAfterConvolve(dc, kc, p, s)
 	dnc := dd * pl
 
 	do := mat64.NewDense(dnr, dnc, nil)
 
 	for i := 0; i < dnr; i++ {
 		for j := 0; j < dnc; j++ {
-			v := data[i/(dnr/dd)].At(i/kc%dd+j/pl, i%kc+j%pl)
+			v := x[i/(dnr/dd)].At(i/kc%dd+(j/pl)*s, i%kc+(j%pl)*s)
 			do.Set(i, j, v)
 		}
 	}
 
-	result := mat64.NewDense(knr, dnc, nil)
-	result.Mul(ko, do)
-
-	return ko, do, result
+	return ko, do
 }
 
-func Reshape2D(m *mat64.Dense, r, c int) *mat64.Dense {
+func Reshape2D(x *mat64.Dense, r, c int) *mat64.Dense {
 
-	_, sc := m.Dims()
+	_, sc := x.Dims()
 	o := mat64.NewDense(r, c, nil)
 
 	for i := 0; i < r; i++ {
 		for j := 0; j < c; j++ {
-			o.Set(i, j, m.At(i/c, (i*c+j)%sc))
+			o.Set(i, j, x.At(i/c, (i*c+j)%sc))
 		}
 	}
 
