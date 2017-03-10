@@ -160,6 +160,22 @@ func Im2col(x []*mat64.Dense, p, s, kd, kr, kc int) *mat64.Dense {
 	return o
 }
 
+func Col2im(x *mat64.Dense, d, r, c int) []*mat64.Dense {
+	_, sc := x.Dims()
+	o := make([]*mat64.Dense, d)
+
+	for i := 0; i < d; i++ {
+		o[i] = mat64.NewDense(r, c, nil)
+		for j := 0; j < r; j++ {
+			for k := 0; k < c; k++ {
+				o[i].Set(j, k, x.At(i, (j*c+k)%sc))
+			}
+		}
+	}
+
+	return o
+}
+
 func ReshapeKernel(x [][]*mat64.Dense) *mat64.Dense {
 	n := len(x)
 	d := len(x[0])
@@ -179,8 +195,34 @@ func ReshapeKernel(x [][]*mat64.Dense) *mat64.Dense {
 	return o
 }
 
-func Reshape2D(x *mat64.Dense, r, c int) *mat64.Dense {
+func Convolve(x, k [][]*mat64.Dense, p, s int) [][]*mat64.Dense {
+	kn := len(k)
+	kd := len(k[0])
+	kr, kc := k[0][0].Dims()
+	xn := len(x)
+	dr, dc := x[0][0].Dims()
 
+	x_new := make([]*mat64.Dense, xn)
+	k_new := ReshapeKernel(k)
+	result := make([][]*mat64.Dense, xn)
+
+	pr := sizeAfterConvolve(dr, kr, p, s)
+	pc := sizeAfterConvolve(dc, kc, p, s)
+
+	for i := 0; i < xn; i++ {
+		x_new[i] = Im2col(x[i], p, s, kd, kr, kc)
+	}
+
+	for i := 0; i < xn; i++ {
+		r := &mat64.Dense{}
+		r.Mul(k_new, x_new[i])
+		result[i] = Col2im(r, kn, pr, pc)
+	}
+
+	return result
+}
+
+func Reshape2DTo2D(x *mat64.Dense, r, c int) *mat64.Dense {
 	_, sc := x.Dims()
 	o := mat64.NewDense(r, c, nil)
 
