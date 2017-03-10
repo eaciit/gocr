@@ -137,15 +137,35 @@ func (v ImageVector) Sum() uint64 {
 	return sum
 }
 
-func sizeAfterConvolve(ds, ks, p, s int) int {
+// ========================= Convolution =========================
+
+// Calculate size after forward
+// ds: Data Size
+// ks: Kernel / Filter size
+// p: Padding
+// s: Stride
+func sizeAfter(ds, ks, p, s int) int {
 	return ((ds - ks + 2*p) / s) + 1
+}
+
+func Reshape2DTo2D(x *mat64.Dense, r, c int) *mat64.Dense {
+	_, sc := x.Dims()
+	o := mat64.NewDense(r, c, nil)
+
+	for i := 0; i < r; i++ {
+		for j := 0; j < c; j++ {
+			o.Set(i, j, x.At(i/c, (i*c+j)%sc))
+		}
+	}
+
+	return o
 }
 
 func Im2col(x []*mat64.Dense, p, s, kd, kr, kc int) *mat64.Dense {
 	dd := len(x)
 	_, dc := x[0].Dims()
 	dnr := kd * kr * kc
-	pl := sizeAfterConvolve(dc, kc, p, s)
+	pl := sizeAfter(dc, kc, p, s)
 	dnc := dd * pl
 
 	o := mat64.NewDense(dnr, dnc, nil)
@@ -206,8 +226,8 @@ func Convolve(x, k [][]*mat64.Dense, p, s int) [][]*mat64.Dense {
 	k_new := ReshapeKernel(k)
 	result := make([][]*mat64.Dense, xn)
 
-	pr := sizeAfterConvolve(dr, kr, p, s)
-	pc := sizeAfterConvolve(dc, kc, p, s)
+	pr := sizeAfter(dr, kr, p, s)
+	pc := sizeAfter(dc, kc, p, s)
 
 	for i := 0; i < xn; i++ {
 		x_new[i] = Im2col(x[i], p, s, kd, kr, kc)
@@ -222,15 +242,32 @@ func Convolve(x, k [][]*mat64.Dense, p, s int) [][]*mat64.Dense {
 	return result
 }
 
-func Reshape2DTo2D(x *mat64.Dense, r, c int) *mat64.Dense {
-	_, sc := x.Dims()
-	o := mat64.NewDense(r, c, nil)
+func MaxPool(x *mat64.Dense, fr, fc int) (*mat64.Dense, *mat64.Dense) {
+	r, c := x.Dims()
+	frc := fr * fc
+	nr := sizeAfter(r, fr, 0, fr)
+	nc := sizeAfter(c, fc, 0, fc)
+	o := mat64.NewDense(nr, nc, nil)
+	sw := mat64.NewDense(nr, nc, nil)
 
-	for i := 0; i < r; i++ {
-		for j := 0; j < c; j++ {
-			o.Set(i, j, x.At(i/c, (i*c+j)%sc))
+	for i := 0; i < nr; i++ {
+		for j := 0; j < nc; j++ {
+			m := 0.0
+			mi := 0
+
+			for k := 0; k < frc; k++ {
+				v := x.At(i*fr+k/fr, j*fc+k%fc)
+
+				if m < v {
+					m = v
+					mi = k
+				}
+			}
+
+			o.Set(i, j, m)
+			sw.Set(i, j, float64(mi))
 		}
 	}
 
-	return o
+	return o, sw
 }
