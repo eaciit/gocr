@@ -11,14 +11,14 @@ var (
 	samplePath = func() string {
 		d, _ := os.Getwd()
 		return d
-	}() + "/../train_data/"
+	}() + "/../../train_data/"
 )
 
 var (
 	modelPath = func() string {
 		d, _ := os.Getwd()
 		return d
-	}() + "/../model/"
+	}() + "/../../model/"
 )
 
 func main() {
