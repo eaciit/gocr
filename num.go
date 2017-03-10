@@ -139,6 +139,8 @@ func (v ImageVector) Sum() uint64 {
 
 // ========================= Convolution =========================
 
+type fn func(int, bool) string
+
 // Calculate size after forward
 // ds: Data Size
 // ks: Kernel / Filter size
@@ -146,6 +148,48 @@ func (v ImageVector) Sum() uint64 {
 // s: Stride
 func sizeAfter(ds, ks, p, s int) int {
 	return ((ds - ks + 2*p) / s) + 1
+}
+
+func Sigmoid(x float64, deriv bool) float64 {
+	if deriv {
+		return x * (1 - x)
+	}
+
+	return 1 / (1 + math.Exp(-x))
+}
+
+func Relu(x float64, deriv bool) float64 {
+	if deriv {
+		if x > 0 {
+			return 1
+		} else {
+			return 0
+		}
+	} else {
+		if x > 0 {
+			return x
+		} else {
+			return 0
+		}
+	}
+}
+
+func LeakyRelu(x float64, deriv bool) float64 {
+	a := 0.001
+
+	if deriv {
+		if x > 0 {
+			return 1
+		} else {
+			return a
+		}
+	} else {
+		if x > 0 {
+			return x
+		} else {
+			return a * x
+		}
+	}
 }
 
 func Reshape2DTo2D(x *mat64.Dense, r, c int) *mat64.Dense {
