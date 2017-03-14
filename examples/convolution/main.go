@@ -2,13 +2,43 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 
 	"github.com/eaciit/gocr"
 	"github.com/gonum/matrix/mat64"
 )
 
-func main() {
+var (
+	modelPath = func() string {
+		d, _ := os.Getwd()
+		return d
+	}() + "/../../model/"
+)
 
+func main() {
+	d, _ := os.Getwd()
+
+	image, _ := gocr.ReadImage(d + "/imagetext_3.png")
+	imageMatrix := gocr.ImageToBinaryArray(image)
+	_, charss := gocr.LinearScan(imageMatrix)
+
+	inputSize := 128
+	s := gocr.NewCNNScannerFromDir(modelPath + "tensor_1/")
+
+	for _, chars := range charss {
+		datas := make([]gocr.ImageMatrix, len(chars))
+		for i := 0; i < len(chars); i++ {
+			datas[i] = gocr.PadAndResize(chars[i], inputSize, inputSize)
+			gocr.ImageMatrixToImage(datas[i], d+"/result/char_"+strconv.Itoa(i)+".png")
+		}
+
+		s.Predicts(datas)
+		fmt.Println("")
+	}
+}
+
+func tryNum() {
 	k1 := mat64.NewDense(2, 2, []float64{1, 2, 3, 4})
 	k2 := mat64.NewDense(2, 2, []float64{5, 6, 7, 8})
 	kernel := [][]*mat64.Dense{{k1, k2}, {k1, k2}}
@@ -25,7 +55,6 @@ func main() {
 	m, _ := gocr.MaxPool(d1, 2, 2)
 	fmt.Println("Result - ")
 	printMatrix(m)
-
 }
 
 func printMatrix(m *mat64.Dense) {
