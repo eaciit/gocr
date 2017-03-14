@@ -77,7 +77,7 @@ func (i ImageMatrix) Pad(top, bottom, left, right int, value uint8) ImageMatrix 
 	sr, sc := i.Dims()
 	nr := sr + top + bottom
 	nc := sc + left + right
-	output := NewImageMatrixWithDefaultValue(nr, nc, 0)
+	output := NewImageMatrixWithDefaultValue(nr, nc, value)
 
 	for r := 0; r < sr; r++ {
 		for c := 0; c < sc; c++ {

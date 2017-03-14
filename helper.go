@@ -101,6 +101,29 @@ func ImageMatrixToImage(imageArray ImageMatrix, outPath string) error {
 	return nil
 }
 
+// Adding pad to make a square matrix
+// Then resize it to given row length and column length
+func PadAndResize(matrix ImageMatrix, dr, dc int) ImageMatrix {
+	resizedMatrix := matrix
+	tr, tc := resizedMatrix.Dims()
+
+	if tr > tc {
+		left := (tr - tc) / 2
+		right := tr - tc - left
+		resizedMatrix = resizedMatrix.Pad(0, 0, left, right, 255)
+	} else if tc > tr {
+		top := (tc - tr) / 2
+		bottom := tc - tr - top
+		resizedMatrix = resizedMatrix.Pad(top, bottom, 0, 0, 255)
+	}
+
+	if dr != tr || dc != tc {
+		resizedMatrix = resizedMatrix.NNInterpolation(dr, dc)
+	}
+
+	return resizedMatrix
+}
+
 // Find the distance of 2 give Dense using Euclidean Distance
 func EuclideanDistance(m1, m2 ImageMatrix) float64 {
 
