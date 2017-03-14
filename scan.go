@@ -250,7 +250,7 @@ func makeTensorFromImage(images ImageMatrixs) (*tf.Tensor, error) {
 			o[k][i] = make([][]float32, len(images[k][i]))
 			for j := 0; j < len(images[k][i]); j++ {
 				o[k][i][j] = make([]float32, 1)
-				o[k][i][j][0] = float32(images[k][i][j])
+				o[k][i][j][0] = float32(images[k][i][j]) / 255.0
 			}
 		}
 	}
