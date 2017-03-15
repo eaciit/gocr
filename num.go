@@ -74,6 +74,53 @@ func (c *Coordinate) NW() *Coordinate {
 	}
 }
 
+func (c *Coordinate) IsInside(a *Area) bool {
+	return c.row >= a.topLeft.row && c.col >= a.topLeft.col && c.row <= a.bottomRight.row && c.col <= a.bottomRight.col
+}
+
+type Area struct {
+	topLeft     *Coordinate
+	bottomRight *Coordinate
+}
+
+func NewArea(coor1, coor2 *Coordinate) *Area {
+	a := &Area{}
+
+	if coor1.row > coor2.row {
+		a.topLeft.row = coor2.row
+		a.bottomRight.row = coor1.row
+	} else {
+		a.topLeft.row = coor1.row
+		a.bottomRight.row = coor2.row
+	}
+
+	if coor1.col > coor2.col {
+		a.bottomRight.col = coor1.col
+		a.topLeft.col = coor2.col
+	} else {
+		a.bottomRight.col = coor2.col
+		a.topLeft.col = coor1.col
+	}
+
+	return a
+}
+
+func (a *Area) Expand(c *Coordinate) {
+	if !c.IsInside(a) {
+		if c.row > a.bottomRight.row {
+			a.bottomRight.row = c.row
+		} else {
+			a.topLeft.row = c.row
+		}
+
+		if c.col > a.bottomRight.col {
+			a.bottomRight.col = c.col
+		} else {
+			a.topLeft.col = c.col
+		}
+	}
+}
+
 type ImageMatrix [][]uint8
 
 type ImageVector []uint8
