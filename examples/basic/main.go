@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/eaciit/gocr"
 )
@@ -32,18 +32,17 @@ func main() {
 	// }
 
 	// Read the image
-	image, err := gocr.ReadImage(d + "/zero.png")
+	image, err := gocr.ReadImage(d + "/imagetext_2.png")
 	if err != nil {
 		panic(err)
 	}
-	data := gocr.ImageToBinaryArray(image)
+	im := gocr.ImageToBinaryArray(image)
+	gocr.ImageMatrixToImage(im, d+"/result/image.png")
 
-	model, err := gocr.ReadModel(d + "/English/model.gob")
-	model.ModelImages = append(model.ModelImages, gocr.ModelImage{
-		Label: "0",
-		Data:  data.NNInterpolation(128, 128),
-	})
+	rs := gocr.CirucularScan(im)
 
-	s := gocr.NewScanner(&model)
-	fmt.Println(s.Predict(data))
+	for i := 0; i < len(rs); i++ {
+		gocr.ImageMatrixToImage(im.SliceArea(rs[i]), d+"/result/image_"+strconv.Itoa(i)+".png")
+	}
+
 }
