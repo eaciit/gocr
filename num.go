@@ -6,6 +6,74 @@ import (
 	"github.com/gonum/matrix/mat64"
 )
 
+type Coordinate struct {
+	row int
+	col int
+}
+
+func NewCoordinate(r, c int) *Coordinate {
+	return &Coordinate{
+		row: r,
+		col: c,
+	}
+}
+
+func (c *Coordinate) N() *Coordinate {
+	return &Coordinate{
+		row: c.row - 1,
+		col: c.col,
+	}
+}
+
+func (c *Coordinate) E() *Coordinate {
+	return &Coordinate{
+		row: c.row,
+		col: c.col + 1,
+	}
+}
+
+func (c *Coordinate) S() *Coordinate {
+	return &Coordinate{
+		row: c.row + 1,
+		col: c.col,
+	}
+}
+
+func (c *Coordinate) W() *Coordinate {
+	return &Coordinate{
+		row: c.row,
+		col: c.col - 1,
+	}
+}
+
+func (c *Coordinate) NE() *Coordinate {
+	return &Coordinate{
+		row: c.row + 1,
+		col: c.col + 1,
+	}
+}
+
+func (c *Coordinate) SE() *Coordinate {
+	return &Coordinate{
+		row: c.row - 1,
+		col: c.col + 1,
+	}
+}
+
+func (c *Coordinate) SW() *Coordinate {
+	return &Coordinate{
+		row: c.row - 1,
+		col: c.col - 1,
+	}
+}
+
+func (c *Coordinate) NW() *Coordinate {
+	return &Coordinate{
+		row: c.row + 1,
+		col: c.col - 1,
+	}
+}
+
 type ImageMatrix [][]uint8
 
 type ImageVector []uint8
