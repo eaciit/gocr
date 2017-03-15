@@ -75,6 +75,10 @@ func (c *Coordinate) NW() *Coordinate {
 }
 
 func (c *Coordinate) IsInside(a *Area) bool {
+	if a.topLeft.row == a.bottomRight.row && a.topLeft.col == a.bottomRight.col {
+		return false
+	}
+
 	return c.row >= a.topLeft.row && c.col >= a.topLeft.col && c.row <= a.bottomRight.row && c.col <= a.bottomRight.col
 }
 
@@ -84,46 +88,52 @@ type Area struct {
 }
 
 func NewArea(coor1, coor2 *Coordinate) *Area {
-	a := &Area{}
+
+	tlr, tlc, brr, brc := 0, 0, 0, 0
 
 	if coor1.row > coor2.row {
-		a.topLeft.row = coor2.row
-		a.bottomRight.row = coor1.row
+		tlr = coor2.row
+		brr = coor1.row
 	} else {
-		a.topLeft.row = coor1.row
-		a.bottomRight.row = coor2.row
+		tlr = coor1.row
+		brr = coor2.row
 	}
 
 	if coor1.col > coor2.col {
-		a.bottomRight.col = coor1.col
-		a.topLeft.col = coor2.col
+		brc = coor1.col
+		tlc = coor2.col
 	} else {
-		a.bottomRight.col = coor2.col
-		a.topLeft.col = coor1.col
+		brc = coor2.col
+		tlc = coor1.col
 	}
 
-	return a
+	return &Area{
+		topLeft:     NewCoordinate(tlr, tlc),
+		bottomRight: NewCoordinate(brr, brc),
+	}
 }
 
 func (a *Area) Expand(c *Coordinate) {
-	if !c.IsInside(a) {
-		if c.row > a.bottomRight.row {
-			a.bottomRight.row = c.row
-		} else {
-			a.topLeft.row = c.row
-		}
+	if c.row > a.bottomRight.row {
+		a.bottomRight.row = c.row
+	} else if c.row < a.topLeft.row {
+		a.topLeft.row = c.row
+	}
 
-		if c.col > a.bottomRight.col {
-			a.bottomRight.col = c.col
-		} else {
-			a.topLeft.col = c.col
-		}
+	if c.col > a.bottomRight.col {
+		a.bottomRight.col = c.col
+	} else if c.col < a.topLeft.col {
+		a.topLeft.col = c.col
 	}
 }
 
-type ImageMatrix [][]uint8
+func (a *Area) Include(r, c int) bool {
+	return r >= a.topLeft.row && c >= a.topLeft.col && r <= a.bottomRight.row && c <= a.bottomRight.col
+}
 
 type ImageVector []uint8
+
+type ImageMatrix [][]uint8
 
 func NewImageMatrix(r, c int) ImageMatrix {
 	imageArray := make([][]uint8, r)
@@ -164,6 +174,19 @@ func (i ImageMatrix) Slice(sr, er, sc, ec int) ImageMatrix {
 	for r := sr; r < er; r++ {
 		for c := sc; c < ec; c++ {
 			slice[r-sr][c-sc] = i[r][c]
+		}
+	}
+
+	return slice
+}
+
+func (im ImageMatrix) SliceArea(a *Area) ImageMatrix {
+	r, c := a.bottomRight.row-a.topLeft.row, a.bottomRight.col-a.topLeft.col
+	slice := NewImageMatrix(r, c)
+
+	for i := 0; i < r; i++ {
+		for j := 0; j < c; j++ {
+			slice[i][j] = im[a.topLeft.row+i][a.topLeft.col+j]
 		}
 	}
 

@@ -143,6 +143,60 @@ func LinearScan(data ImageMatrix) ([]ImageMatrix, [][]ImageMatrix) {
 	return lines, charss
 }
 
+func CirucularScan(image ImageMatrix) []*Area {
+	r, c := image.Dims()
+	start := NewCoordinate(0, 0)
+	exploredArea := NewArea(start, start)
+	imageArea := NewArea(start, NewCoordinate(r, c))
+	resultsArea := []*Area{}
+
+	for i := 0; i < c; i++ {
+		for j := 0; j < r; j++ {
+			if exploredArea.Include(j, i) {
+				continue
+			}
+
+			if image.At(j, i) == 0 {
+				coor := NewCoordinate(j, i)
+				result := NewArea(coor, coor)
+				vcs := []*Coordinate{}
+
+				circleRun(image, coor, &vcs, imageArea, result)
+
+				resultsArea = append(resultsArea, result)
+				exploredArea.Expand(result.topLeft)
+				exploredArea.Expand(result.bottomRight)
+			}
+		}
+	}
+
+	return resultsArea
+}
+
+func circleRun(i ImageMatrix, c *Coordinate, vcs *[]*Coordinate, ia, ra *Area) {
+	if c.IsInside(ia) {
+		for _, cs := range *vcs {
+			if c.row == cs.row && c.col == cs.col {
+				return
+			}
+		}
+		*vcs = append(*vcs, c)
+
+		if i.At(c.row, c.col) == 0 {
+			ra.Expand(c)
+
+			circleRun(i, c.N(), vcs, ia, ra)
+			circleRun(i, c.NE(), vcs, ia, ra)
+			circleRun(i, c.E(), vcs, ia, ra)
+			circleRun(i, c.SE(), vcs, ia, ra)
+			circleRun(i, c.S(), vcs, ia, ra)
+			circleRun(i, c.SW(), vcs, ia, ra)
+			circleRun(i, c.W(), vcs, ia, ra)
+			circleRun(i, c.NW(), vcs, ia, ra)
+		}
+	}
+}
+
 // ================================= Nearest Neighbor Scanner =================================
 type NNScanner struct {
 	model *Model
