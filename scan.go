@@ -146,13 +146,21 @@ func LinearScan(data ImageMatrix) ([]ImageMatrix, [][]ImageMatrix) {
 func CirucularScan(image ImageMatrix) []*Area {
 	r, c := image.Dims()
 	start := NewCoordinate(0, 0)
-	exploredArea := NewArea(start, start)
 	imageArea := NewArea(start, NewCoordinate(r, c))
+	exploredAreas := []*Area{}
 	resultsArea := []*Area{}
 
 	for i := 0; i < c; i++ {
 		for j := 0; j < r; j++ {
-			if exploredArea.Include(j, i) {
+			exist := false
+			for _, ea := range exploredAreas {
+				if ea.Include(j, i) {
+					exist = true
+					break
+				}
+			}
+
+			if exist {
 				continue
 			}
 
@@ -164,8 +172,7 @@ func CirucularScan(image ImageMatrix) []*Area {
 				circleRun(image, coor, &vcs, imageArea, result)
 
 				resultsArea = append(resultsArea, result)
-				exploredArea.Expand(result.topLeft)
-				exploredArea.Expand(result.bottomRight)
+				exploredAreas = append(exploredAreas, result)
 			}
 		}
 	}
