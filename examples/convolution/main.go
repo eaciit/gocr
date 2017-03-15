@@ -19,12 +19,12 @@ var (
 func main() {
 	d, _ := os.Getwd()
 
-	image, _ := gocr.ReadImage(d + "/imagetext_3.png")
+	image, _ := gocr.ReadImage(d + "/imagetext_5.png")
 	imageMatrix := gocr.ImageToBinaryArray(image)
 	_, charss := gocr.LinearScan(imageMatrix)
 
-	inputSize := 128
-	s := gocr.NewCNNScannerFromDir(modelPath + "tensor_1/")
+	inputSize := 64
+	s := gocr.NewCNNScannerFromDir(modelPath + "tensor_3/")
 
 	for _, chars := range charss {
 		datas := make([]gocr.ImageMatrix, len(chars))
