@@ -239,8 +239,7 @@ func findTopSquare(s *Square, squares []*Square) (*Square, int) {
 
 	for i := 0; i < len(squares); i++ {
 		if squares[i].topLeft.col < m && m < squares[i].bottomRight.col {
-			cd := s.NearestDistanceTo(squares[i])
-
+			cd := s.NearestVerticalDistanceTo(squares[i])
 			if nd > cd && cd > 0 {
 				nd = cd
 				ni = i
