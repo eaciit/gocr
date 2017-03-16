@@ -264,47 +264,47 @@ type Predictor interface {
 	Predicts(ImageMatrixs) []string
 }
 
-// ================================= Nearest Neighbor Scanner =================================
-type NNScanner struct {
+// ================================= Nearest Neighbor Predictor =================================
+type NNPredictor struct {
 	model *Model
 }
 
-func NewNNScanner(model *Model) *NNScanner {
-	return &NNScanner{
+func NewNNPredictor(model *Model) *NNPredictor {
+	return &NNPredictor{
 		model: model,
 	}
 }
 
-func NewNNScannerFromFile(path string) *NNScanner {
+func NewNNPredictorFromFile(path string) *NNPredictor {
 	model, err := ReadModel(path)
 	if err != nil {
 		panic(err)
 	}
 
-	return &NNScanner{
+	return &NNPredictor{
 		model: &model,
 	}
 }
 
-func (s *NNScanner) inputHeight() int {
-	r, _ := s.model.ModelImages[0].Data.Dims()
+func (p *NNPredictor) inputHeight() int {
+	r, _ := p.model.ModelImages[0].Data.Dims()
 	return r
 }
 
-func (s *NNScanner) inputWidth() int {
-	_, c := s.model.ModelImages[0].Data.Dims()
+func (p *NNPredictor) inputWidth() int {
+	_, c := p.model.ModelImages[0].Data.Dims()
 	return c
 }
 
-func (s *NNScanner) Predicts(images ImageMatrixs) []string {
+func (p *NNPredictor) Predicts(images ImageMatrixs) []string {
 	predictedLabels := make([]string, len(images))
-	mr, mc := s.model.ModelImages[0].Data.Dims()
+	mr, mc := p.model.ModelImages[0].Data.Dims()
 
 	for i, image := range images {
 		resizedMatrix := PadAndResize(image, mr, mc)
 
 		min := math.MaxFloat64
-		for _, modelImage := range s.model.ModelImages {
+		for _, modelImage := range p.model.ModelImages {
 			distance := EuclideanDistance(resizedMatrix, modelImage.Data)
 
 			fmt.Println(modelImage.Label, distance, " ")
@@ -318,38 +318,38 @@ func (s *NNScanner) Predicts(images ImageMatrixs) []string {
 	return predictedLabels
 }
 
-// ================================= Tensor CNN Scanner =================================
+// ================================= Tensor CNN Predictor =================================
 
-type CNNScanner struct {
+type CNNPredictor struct {
 	graph       *tf.Graph
 	labels      []string
 	InputHeight int
 	InputWidth  int
 }
 
-func NewCNNScanner(graph *tf.Graph, labels []string) *CNNScanner {
-	return &CNNScanner{
+func NewCNNPredictor(graph *tf.Graph, labels []string) *CNNPredictor {
+	return &CNNPredictor{
 		graph:  graph,
 		labels: labels,
 	}
 }
 
-func NewCNNScannerFromDir(dir string) *CNNScanner {
+func NewCNNPredictorFromDir(dir string) *CNNPredictor {
 	graph, labels := loadModel(dir)
-	return NewCNNScanner(graph, labels)
+	return NewCNNPredictor(graph, labels)
 }
 
-func (s *CNNScanner) inputHeight() int {
-	return s.InputHeight
+func (p *CNNPredictor) inputHeight() int {
+	return p.InputHeight
 }
 
-func (s *CNNScanner) inputWidth() int {
-	return s.InputWidth
+func (p *CNNPredictor) inputWidth() int {
+	return p.InputWidth
 }
 
-func (s *CNNScanner) Predicts(images ImageMatrixs) []string {
+func (p *CNNPredictor) Predicts(images ImageMatrixs) []string {
 
-	session, err := tf.NewSession(s.graph, nil)
+	session, err := tf.NewSession(p.graph, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -363,11 +363,11 @@ func (s *CNNScanner) Predicts(images ImageMatrixs) []string {
 
 	output, err := session.Run(
 		map[tf.Output]*tf.Tensor{
-			s.graph.Operation("convolution2d_input_1").Output(0): tensorImages,
-			s.graph.Operation("keras_learning_phase").Output(0):  kerasFlag,
+			p.graph.Operation("convolution2d_input_1").Output(0): tensorImages,
+			p.graph.Operation("keras_learning_phase").Output(0):  kerasFlag,
 		},
 		[]tf.Output{
-			s.graph.Operation("ArgMax_1").Output(0),
+			p.graph.Operation("ArgMax_1").Output(0),
 		},
 		nil)
 
@@ -378,7 +378,7 @@ func (s *CNNScanner) Predicts(images ImageMatrixs) []string {
 	predictions := output[0].Value().([]int64)
 	result := make([]string, len(predictions))
 	for i, prediction := range predictions {
-		result[i] = s.labels[prediction]
+		result[i] = p.labels[prediction]
 	}
 
 	return result
