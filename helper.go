@@ -60,7 +60,7 @@ func ImageToBinaryArray(src image.Image) ImageMatrix {
 
 	for y := 0; y < gray.Bounds().Max.Y; y++ {
 		for x := 0; x < gray.Bounds().Max.X; x++ {
-			imageArr[y][x] = gray.GrayAt(x, y).Y
+			imageArr[y][x] = gray.GrayAt(x, y).Y / 255
 		}
 	}
 
@@ -110,11 +110,11 @@ func PadAndResize(matrix ImageMatrix, dr, dc int) ImageMatrix {
 	if tr > tc {
 		left := (tr - tc) / 2
 		right := tr - tc - left
-		resizedMatrix = resizedMatrix.Pad(0, 0, left, right, 255)
+		resizedMatrix = resizedMatrix.Pad(0, 0, left, right, 1)
 	} else if tc > tr {
 		top := (tc - tr) / 2
 		bottom := tc - tr - top
-		resizedMatrix = resizedMatrix.Pad(top, bottom, 0, 0, 255)
+		resizedMatrix = resizedMatrix.Pad(top, bottom, 0, 0, 1)
 	}
 
 	if dr != tr || dc != tc {

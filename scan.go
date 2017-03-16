@@ -85,7 +85,7 @@ func MarkersOfMatrix(data ImageMatrix, threshold float64, direction int) []Marke
 func LinearScan(data ImageMatrix) ([]ImageMatrix, [][]ImageMatrix) {
 	r, c := data.Dims()
 
-	markers := MarkersOfMatrix(data, 0.9*255, 0)
+	markers := MarkersOfMatrix(data, 0.9, 0)
 	lines := []ImageMatrix{}
 
 	rowPadding := 10
@@ -112,7 +112,7 @@ func LinearScan(data ImageMatrix) ([]ImageMatrix, [][]ImageMatrix) {
 	charss := [][]ImageMatrix{}
 
 	for _, line := range lines {
-		markers := MarkersOfMatrix(line, 0.95*255, 1)
+		markers := MarkersOfMatrix(line, 0.95, 1)
 		r, c := line.Dims()
 		chars := []ImageMatrix{}
 
@@ -311,7 +311,7 @@ func makeTensorFromImage(images ImageMatrixs) (*tf.Tensor, error) {
 			o[k][i] = make([][]float32, len(images[k][i]))
 			for j := 0; j < len(images[k][i]); j++ {
 				o[k][i][j] = make([]float32, 1)
-				o[k][i][j][0] = float32(images[k][i][j]) / 255.0
+				o[k][i][j][0] = float32(images[k][i][j])
 			}
 		}
 	}
