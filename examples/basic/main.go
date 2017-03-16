@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"strconv"
 
 	"github.com/eaciit/gocr"
 )
@@ -38,11 +37,5 @@ func main() {
 	}
 	im := gocr.ImageToBinaryArray(image)
 	gocr.ImageMatrixToImage(im, d+"/result/image.png", 255)
-
-	rs := gocr.CirucularScan(im)
-
-	for i := 0; i < len(rs); i++ {
-		gocr.ImageMatrixToImage(im.SliceSquare(rs[i]), d+"/result/image_"+strconv.Itoa(i)+".png", 255)
-	}
 
 }

@@ -86,6 +86,26 @@ func (c *Coordinate) DistanceTo(c2 *Coordinate) float64 {
 	return math.Sqrt(math.Pow(float64(c2.row-c.row), 2) + math.Pow(float64(c2.col-c.col), 2))
 }
 
+func (c *Coordinate) HorizontalDistanceTo(c2 *Coordinate) float64 {
+	dist := float64(c.col - c2.col)
+
+	if dist < 0 {
+		return -dist
+	} else {
+		return dist
+	}
+}
+
+func (c *Coordinate) VerticalDistanceTo(c2 *Coordinate) float64 {
+	dist := float64(c.row - c2.row)
+
+	if dist < 0 {
+		return -dist
+	} else {
+		return dist
+	}
+}
+
 type Square struct {
 	topLeft     *Coordinate
 	bottomRight *Coordinate
@@ -156,6 +176,24 @@ func (s *Square) DistancesTo(s2 *Square) []float64 {
 	}
 }
 
+func (s *Square) HorizontalDistancesTo(s2 *Square) []float64 {
+	return []float64{
+		s.topLeft.HorizontalDistanceTo(s2.topLeft),
+		s.topLeft.HorizontalDistanceTo(s2.bottomRight),
+		s.bottomRight.HorizontalDistanceTo(s2.topLeft),
+		s.bottomRight.HorizontalDistanceTo(s2.bottomRight),
+	}
+}
+
+func (s *Square) VerticalDistancesTo(s2 *Square) []float64 {
+	return []float64{
+		s.topLeft.VerticalDistanceTo(s2.topLeft),
+		s.topLeft.VerticalDistanceTo(s2.bottomRight),
+		s.bottomRight.VerticalDistanceTo(s2.topLeft),
+		s.bottomRight.VerticalDistanceTo(s2.bottomRight),
+	}
+}
+
 func (s *Square) NearestDistanceTo(s2 *Square) float64 {
 	ds := s.DistancesTo(s2)
 	m := ds[0]
@@ -182,6 +220,80 @@ func (s *Square) AverageDistanceTo(s2 *Square) float64 {
 
 func (s *Square) FarthestDistanceTo(s2 *Square) float64 {
 	ds := s.DistancesTo(s2)
+	m := ds[0]
+
+	for _, e := range ds {
+		if e > m {
+			m = e
+		}
+	}
+
+	return m
+}
+
+func (s *Square) NearestHorizontalDistanceTo(s2 *Square) float64 {
+	ds := s.HorizontalDistancesTo(s2)
+	m := ds[0]
+
+	for _, e := range ds {
+		if e < m {
+			m = e
+		}
+	}
+
+	return m
+}
+
+func (s *Square) AverageHorizontalDistanceTo(s2 *Square) float64 {
+	ds := s.HorizontalDistancesTo(s2)
+	sum := 0.0
+
+	for _, e := range ds {
+		sum += e
+	}
+
+	return sum / 4
+}
+
+func (s *Square) FarthestHorizontalDistanceTo(s2 *Square) float64 {
+	ds := s.HorizontalDistancesTo(s2)
+	m := ds[0]
+
+	for _, e := range ds {
+		if e > m {
+			m = e
+		}
+	}
+
+	return m
+}
+
+func (s *Square) NearestVerticalDistanceTo(s2 *Square) float64 {
+	ds := s.VerticalDistancesTo(s2)
+	m := ds[0]
+
+	for _, e := range ds {
+		if e < m {
+			m = e
+		}
+	}
+
+	return m
+}
+
+func (s *Square) AverageVerticalDistanceTo(s2 *Square) float64 {
+	ds := s.VerticalDistancesTo(s2)
+	sum := 0.0
+
+	for _, e := range ds {
+		sum += e
+	}
+
+	return sum / 4
+}
+
+func (s *Square) FarthestVerticalDistanceTo(s2 *Square) float64 {
+	ds := s.VerticalDistancesTo(s2)
 	m := ds[0]
 
 	for _, e := range ds {

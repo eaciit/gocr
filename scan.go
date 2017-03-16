@@ -143,7 +143,7 @@ func LinearScan(data ImageMatrix) [][]ImageMatrix {
 	return charss
 }
 
-func CirucularScan(image ImageMatrix) []*Square {
+func CirucularScan(image ImageMatrix) [][]ImageMatrix {
 	r, c := image.Dims()
 	start := NewCoordinate(0, 0)
 	imageSquare := NewSquare(start, NewCoordinate(r, c))
@@ -176,6 +176,9 @@ func CirucularScan(image ImageMatrix) []*Square {
 		}
 	}
 
+	charss := [][]ImageMatrix{}
+	keySquares := []*Square{}
+
 	for _, result := range resultsSquare {
 		if result.Width() < result.Height() {
 			hat, i := findTopSquare(result, resultsSquare)
@@ -186,7 +189,23 @@ func CirucularScan(image ImageMatrix) []*Square {
 		}
 	}
 
-	return resultsSquare
+	for _, result := range resultsSquare {
+		match := false
+		for i, key := range keySquares {
+			if result.AverageVerticalDistanceTo(key) < float64(key.Height()) {
+				charss[i] = append(charss[i], image.SliceSquare(result))
+				match = true
+				break
+			}
+		}
+
+		if !match {
+			charss = append(charss, []ImageMatrix{image.SliceSquare(result)})
+			keySquares = append(keySquares, result)
+		}
+	}
+
+	return charss
 }
 
 func circleRun(i ImageMatrix, c *Coordinate, vcs *[]*Coordinate, ia, rs *Square) {

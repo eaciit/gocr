@@ -21,7 +21,7 @@ func main() {
 
 	image, _ := gocr.ReadImage(d + "/imagetext_5.png")
 	imageMatrix := gocr.ImageToBinaryArray(image)
-	_, charss := gocr.LinearScan(imageMatrix)
+	charss := gocr.CirucularScan(imageMatrix)
 
 	inputSize := 64
 	s := gocr.NewCNNScannerFromDir(modelPath + "tensor_3/")
