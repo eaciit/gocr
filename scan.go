@@ -170,9 +170,18 @@ func CirucularScan(image ImageMatrix) []*Square {
 				vcs := []*Coordinate{}
 
 				circleRun(image, coor, &vcs, imageSquare, result)
-
 				resultsSquare = append(resultsSquare, result)
 				exploredSquares = append(exploredSquares, result)
+			}
+		}
+	}
+
+	for _, result := range resultsSquare {
+		if result.Width() < result.Height() {
+			hat, i := findTopSquare(result, resultsSquare)
+			if hat != nil {
+				result.Merge(hat)
+				resultsSquare = append(resultsSquare[:i], resultsSquare[i+1:]...)
 			}
 		}
 	}
@@ -201,6 +210,29 @@ func circleRun(i ImageMatrix, c *Coordinate, vcs *[]*Coordinate, ia, rs *Square)
 			circleRun(i, c.W(), vcs, ia, rs)
 			circleRun(i, c.NW(), vcs, ia, rs)
 		}
+	}
+}
+
+func findTopSquare(s *Square, squares []*Square) (*Square, int) {
+	m := s.topLeft.col + (s.bottomRight.col-s.topLeft.col)/2
+	ni := -1
+	nd := float64((s.bottomRight.row - s.topLeft.row)) / 2
+
+	for i := 0; i < len(squares); i++ {
+		if squares[i].topLeft.col < m && m < squares[i].bottomRight.col {
+			cd := s.NearestDistanceTo(squares[i])
+
+			if nd > cd && cd > 0 {
+				nd = cd
+				ni = i
+			}
+		}
+	}
+
+	if ni < 0 {
+		return nil, ni
+	} else {
+		return squares[ni], ni
 	}
 }
 

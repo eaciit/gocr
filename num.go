@@ -82,6 +82,10 @@ func (c *Coordinate) IsInside(s *Square) bool {
 	return c.row >= s.topLeft.row && c.col >= s.topLeft.col && c.row <= s.bottomRight.row && c.col <= s.bottomRight.col
 }
 
+func (c *Coordinate) DistanceTo(c2 *Coordinate) float64 {
+	return math.Sqrt(math.Pow(float64(c2.row-c.row), 2) + math.Pow(float64(c2.col-c.col), 2))
+}
+
 type Square struct {
 	topLeft     *Coordinate
 	bottomRight *Coordinate
@@ -113,6 +117,14 @@ func NewSquare(coor1, coor2 *Coordinate) *Square {
 	}
 }
 
+func (s *Square) Width() int {
+	return s.bottomRight.col - s.topLeft.col
+}
+
+func (s *Square) Height() int {
+	return s.bottomRight.row - s.topLeft.row
+}
+
 func (s *Square) Area() int {
 	return (s.bottomRight.row - s.topLeft.row) * (s.bottomRight.col - s.topLeft.col)
 }
@@ -133,6 +145,52 @@ func (s *Square) Expand(c *Coordinate) {
 
 func (s *Square) Include(r, c int) bool {
 	return r >= s.topLeft.row && c >= s.topLeft.col && r <= s.bottomRight.row && c <= s.bottomRight.col
+}
+
+func (s *Square) DistancesTo(s2 *Square) []float64 {
+	return []float64{
+		s.topLeft.DistanceTo(s2.topLeft),
+		s.topLeft.DistanceTo(s2.topLeft),
+		s.topLeft.DistanceTo(s2.topLeft),
+		s.topLeft.DistanceTo(s2.topLeft),
+	}
+}
+
+func (s *Square) NearestDistanceTo(s2 *Square) float64 {
+	ds := s.DistancesTo(s2)
+	m := ds[0]
+
+	for _, e := range ds {
+		if e < m {
+			m = e
+		}
+	}
+
+	return m
+}
+
+func (s *Square) AverageDistanceTo(s2 *Square) float64 {
+	ds := s.DistancesTo(s2)
+	sum := 0.0
+
+	for _, e := range ds {
+		sum += e
+	}
+
+	return sum / 4
+}
+
+func (s *Square) FarthestDistanceTo(s2 *Square) float64 {
+	ds := s.DistancesTo(s2)
+	m := ds[0]
+
+	for _, e := range ds {
+		if e > m {
+			m = e
+		}
+	}
+
+	return m
 }
 
 func (s *Square) Merge(a2 *Square) {

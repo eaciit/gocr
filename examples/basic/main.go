@@ -42,7 +42,7 @@ func main() {
 	rs := gocr.CirucularScan(im)
 
 	for i := 0; i < len(rs); i++ {
-		gocr.ImageMatrixToImage(im.SliceArea(rs[i]), d+"/result/image_"+strconv.Itoa(i)+".png", 255)
+		gocr.ImageMatrixToImage(im.SliceSquare(rs[i]), d+"/result/image_"+strconv.Itoa(i)+".png", 255)
 	}
 
 }
