@@ -21,19 +21,30 @@ func main() {
 
 	image, _ := gocr.ReadImage(d + "/imagetext_5.png")
 	imageMatrix := gocr.ImageToBinaryArray(image)
-	charss := gocr.CirucularScan(imageMatrix)
+	squaress, charss := gocr.CirucularScan(imageMatrix)
 
 	inputSize := 64
 	s := gocr.NewCNNScannerFromDir(modelPath + "tensor_3/")
 
-	for _, chars := range charss {
+	for k, chars := range charss {
 		datas := make([]gocr.ImageMatrix, len(chars))
 		for i := 0; i < len(chars); i++ {
 			datas[i] = gocr.PadAndResize(chars[i], inputSize, inputSize)
 			gocr.ImageMatrixToImage(datas[i], d+"/result/char_"+strconv.Itoa(i)+".png", 255)
 		}
 
-		s.Predicts(datas)
+		texts := s.Predicts(datas)
+		for i, text := range texts {
+			if i < len(squaress[k])-1 {
+				if squaress[k][i].NearestHorizontalDistanceTo(squaress[k][i+1]) > float64(squaress[k][i].Width()) {
+					print(text + " ")
+					continue
+				}
+			}
+
+			print(text)
+		}
+
 		fmt.Println("")
 	}
 }

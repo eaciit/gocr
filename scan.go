@@ -143,7 +143,7 @@ func LinearScan(data ImageMatrix) [][]ImageMatrix {
 	return charss
 }
 
-func CirucularScan(image ImageMatrix) [][]ImageMatrix {
+func CirucularScan(image ImageMatrix) ([][]*Square, [][]ImageMatrix) {
 	r, c := image.Dims()
 	start := NewCoordinate(0, 0)
 	imageSquare := NewSquare(start, NewCoordinate(r, c))
@@ -177,7 +177,7 @@ func CirucularScan(image ImageMatrix) [][]ImageMatrix {
 	}
 
 	charss := [][]ImageMatrix{}
-	keySquares := []*Square{}
+	squaress := [][]*Square{}
 
 	for _, result := range resultsSquare {
 		if result.Width() < result.Height() {
@@ -191,9 +191,10 @@ func CirucularScan(image ImageMatrix) [][]ImageMatrix {
 
 	for _, result := range resultsSquare {
 		match := false
-		for i, key := range keySquares {
-			if result.AverageVerticalDistanceTo(key) < float64(key.Height()) {
+		for i, squares := range squaress {
+			if result.AverageVerticalDistanceTo(squares[0]) < float64(squares[0].Height()) {
 				charss[i] = append(charss[i], image.SliceSquare(result))
+				squaress[i] = append(squaress[i], result)
 				match = true
 				break
 			}
@@ -201,11 +202,11 @@ func CirucularScan(image ImageMatrix) [][]ImageMatrix {
 
 		if !match {
 			charss = append(charss, []ImageMatrix{image.SliceSquare(result)})
-			keySquares = append(keySquares, result)
+			squaress = append(squaress, []*Square{result})
 		}
 	}
 
-	return charss
+	return squaress, charss
 }
 
 func circleRun(i ImageMatrix, c *Coordinate, vcs *[]*Coordinate, ia, rs *Square) {
@@ -344,11 +345,12 @@ func (s *CNNScanner) Predicts(images ImageMatrixs) []string {
 	}
 
 	predictions := output[0].Value().([]int64)
-	for _, prediction := range predictions {
-		fmt.Print(s.labels[prediction])
+	result := make([]string, len(predictions))
+	for i, prediction := range predictions {
+		result[i] = s.labels[prediction]
 	}
 
-	return nil
+	return result
 }
 
 func makeTensorFromImage(images ImageMatrixs) (*tf.Tensor, error) {
