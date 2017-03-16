@@ -150,9 +150,9 @@ func (s *Square) Include(r, c int) bool {
 func (s *Square) DistancesTo(s2 *Square) []float64 {
 	return []float64{
 		s.topLeft.DistanceTo(s2.topLeft),
-		s.topLeft.DistanceTo(s2.topLeft),
-		s.topLeft.DistanceTo(s2.topLeft),
-		s.topLeft.DistanceTo(s2.topLeft),
+		s.topLeft.DistanceTo(s2.bottomRight),
+		s.bottomRight.DistanceTo(s2.topLeft),
+		s.bottomRight.DistanceTo(s2.bottomRight),
 	}
 }
 

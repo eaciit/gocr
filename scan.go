@@ -82,7 +82,7 @@ func MarkersOfMatrix(data ImageMatrix, threshold float64, direction int) []Marke
 
 // Scan the DarkSquare and return it as []mat64.Dense for each line
 // And [][]mat64.Dense for each characther
-func LinearScan(data ImageMatrix) ([]ImageMatrix, [][]ImageMatrix) {
+func LinearScan(data ImageMatrix) [][]ImageMatrix {
 	r, c := data.Dims()
 
 	markers := MarkersOfMatrix(data, 0.9, 0)
@@ -140,7 +140,7 @@ func LinearScan(data ImageMatrix) ([]ImageMatrix, [][]ImageMatrix) {
 		charss = append(charss, chars)
 	}
 
-	return lines, charss
+	return charss
 }
 
 func CirucularScan(image ImageMatrix) []*Square {
