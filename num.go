@@ -164,6 +164,10 @@ func (i ImageMatrix) At(r, c int) uint8 {
 	return i[r][c]
 }
 
+func (i ImageMatrix) AtCoordinate(c *Coordinate) uint8 {
+	return i[c.row][c.col]
+}
+
 func (i ImageMatrix) Set(r, c int, value uint8) {
 	i[r][c] = value
 }
@@ -209,6 +213,35 @@ func (i ImageMatrix) NNInterpolation(tr, tc int) ImageMatrix {
 	}
 
 	return output
+}
+
+// Erode using 4 Neighborhood
+func (im ImageMatrix) Erode() {
+	r, c := im.Dims()
+	a := NewArea(NewCoordinate(0, 0), NewCoordinate(r, c))
+
+	for i := 0; i < r; i++ {
+		for j := 0; j < c; j++ {
+			n := NewCoordinate(i, j)
+			n1, n2, n3, n4 := n.N(), n.E(), n.W(), n.S()
+
+			if n1.IsInside(a) && n2.IsInside(a) && n3.IsInside(a) && n4.IsInside(a) {
+				sum := im.AtCoordinate(n) + im.AtCoordinate(n1) + im.AtCoordinate(n2) + im.AtCoordinate(n3) + im.AtCoordinate(n4)
+				if sum > 0 {
+					im.Set(n.row, n.col, 2)
+				}
+			}
+		}
+	}
+
+	for i := 0; i < r; i++ {
+		for j := 0; j < c; j++ {
+			if im.At(i, j) == 2 {
+				im.Set(i, j, 0)
+			}
+		}
+	}
+
 }
 
 func (i ImageMatrix) Pad(top, bottom, left, right int, value uint8) ImageMatrix {
