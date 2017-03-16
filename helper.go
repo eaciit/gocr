@@ -77,7 +77,7 @@ func SauvolaBinarization(imageArr ImageMatrix) ImageMatrix {
 }
 
 // Convert ImageMatrix to Image and save it to given path
-func ImageMatrixToImage(imageArray ImageMatrix, outPath string) error {
+func ImageMatrixToImage(imageArray ImageMatrix, outPath string, mul int) error {
 	r := len(imageArray)
 	c := len(imageArray[0])
 
@@ -85,7 +85,7 @@ func ImageMatrixToImage(imageArray ImageMatrix, outPath string) error {
 	for x := 0; x < c; x++ {
 		for y := 0; y < r; y++ {
 			grayColor := color.Gray{}
-			grayColor.Y = imageArray[y][x]
+			grayColor.Y = imageArray[y][x] * uint8(mul)
 			gray.Set(x, y, grayColor)
 		}
 	}

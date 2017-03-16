@@ -30,7 +30,7 @@ func main() {
 		datas := make([]gocr.ImageMatrix, len(chars))
 		for i := 0; i < len(chars); i++ {
 			datas[i] = gocr.PadAndResize(chars[i], inputSize, inputSize)
-			gocr.ImageMatrixToImage(datas[i], d+"/result/char_"+strconv.Itoa(i)+".png")
+			gocr.ImageMatrixToImage(datas[i], d+"/result/char_"+strconv.Itoa(i)+".png", 255)
 		}
 
 		s.Predicts(datas)

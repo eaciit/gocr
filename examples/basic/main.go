@@ -37,12 +37,12 @@ func main() {
 		panic(err)
 	}
 	im := gocr.ImageToBinaryArray(image)
-	gocr.ImageMatrixToImage(im, d+"/result/image.png")
+	gocr.ImageMatrixToImage(im, d+"/result/image.png", 255)
 
 	rs := gocr.CirucularScan(im)
 
 	for i := 0; i < len(rs); i++ {
-		gocr.ImageMatrixToImage(im.SliceArea(rs[i]), d+"/result/image_"+strconv.Itoa(i)+".png")
+		gocr.ImageMatrixToImage(im.SliceArea(rs[i]), d+"/result/image_"+strconv.Itoa(i)+".png", 255)
 	}
 
 }
