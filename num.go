@@ -74,20 +74,20 @@ func (c *Coordinate) NW() *Coordinate {
 	}
 }
 
-func (c *Coordinate) IsInside(a *Area) bool {
-	if a.topLeft.row == a.bottomRight.row && a.topLeft.col == a.bottomRight.col {
+func (c *Coordinate) IsInside(s *Square) bool {
+	if s.Area() == 0 {
 		return false
 	}
 
-	return c.row >= a.topLeft.row && c.col >= a.topLeft.col && c.row <= a.bottomRight.row && c.col <= a.bottomRight.col
+	return c.row >= s.topLeft.row && c.col >= s.topLeft.col && c.row <= s.bottomRight.row && c.col <= s.bottomRight.col
 }
 
-type Area struct {
+type Square struct {
 	topLeft     *Coordinate
 	bottomRight *Coordinate
 }
 
-func NewArea(coor1, coor2 *Coordinate) *Area {
+func NewSquare(coor1, coor2 *Coordinate) *Square {
 
 	tlr, tlc, brr, brc := 0, 0, 0, 0
 
@@ -107,28 +107,37 @@ func NewArea(coor1, coor2 *Coordinate) *Area {
 		tlc = coor1.col
 	}
 
-	return &Area{
+	return &Square{
 		topLeft:     NewCoordinate(tlr, tlc),
 		bottomRight: NewCoordinate(brr, brc),
 	}
 }
 
-func (a *Area) Expand(c *Coordinate) {
-	if c.row > a.bottomRight.row {
-		a.bottomRight.row = c.row
-	} else if c.row < a.topLeft.row {
-		a.topLeft.row = c.row
+func (s *Square) Area() int {
+	return (s.bottomRight.row - s.topLeft.row) * (s.bottomRight.col - s.topLeft.col)
+}
+
+func (s *Square) Expand(c *Coordinate) {
+	if c.row > s.bottomRight.row {
+		s.bottomRight.row = c.row
+	} else if c.row < s.topLeft.row {
+		s.topLeft.row = c.row
 	}
 
-	if c.col > a.bottomRight.col {
-		a.bottomRight.col = c.col
-	} else if c.col < a.topLeft.col {
-		a.topLeft.col = c.col
+	if c.col > s.bottomRight.col {
+		s.bottomRight.col = c.col
+	} else if c.col < s.topLeft.col {
+		s.topLeft.col = c.col
 	}
 }
 
-func (a *Area) Include(r, c int) bool {
-	return r >= a.topLeft.row && c >= a.topLeft.col && r <= a.bottomRight.row && c <= a.bottomRight.col
+func (s *Square) Include(r, c int) bool {
+	return r >= s.topLeft.row && c >= s.topLeft.col && r <= s.bottomRight.row && c <= s.bottomRight.col
+}
+
+func (s *Square) Merge(a2 *Square) {
+	s.Expand(a2.topLeft)
+	s.Expand(a2.bottomRight)
 }
 
 type ImageVector []uint8
@@ -184,13 +193,13 @@ func (i ImageMatrix) Slice(sr, er, sc, ec int) ImageMatrix {
 	return slice
 }
 
-func (im ImageMatrix) SliceArea(a *Area) ImageMatrix {
-	r, c := a.bottomRight.row-a.topLeft.row, a.bottomRight.col-a.topLeft.col
+func (im ImageMatrix) SliceSquare(s *Square) ImageMatrix {
+	r, c := s.bottomRight.row-s.topLeft.row, s.bottomRight.col-s.topLeft.col
 	slice := NewImageMatrix(r, c)
 
 	for i := 0; i < r; i++ {
 		for j := 0; j < c; j++ {
-			slice[i][j] = im[a.topLeft.row+i][a.topLeft.col+j]
+			slice[i][j] = im[s.topLeft.row+i][s.topLeft.col+j]
 		}
 	}
 
@@ -218,7 +227,7 @@ func (i ImageMatrix) NNInterpolation(tr, tc int) ImageMatrix {
 // Erode using 4 Neighborhood
 func (im ImageMatrix) Erode() {
 	r, c := im.Dims()
-	a := NewArea(NewCoordinate(0, 0), NewCoordinate(r, c))
+	a := NewSquare(NewCoordinate(0, 0), NewCoordinate(r, c))
 
 	for i := 0; i < r; i++ {
 		for j := 0; j < c; j++ {

@@ -37,14 +37,14 @@ func ReadModel(path string) (Model, error) {
 	return model, nil
 }
 
-// Find Marker of DarkArea from given Matrix
+// Find Marker of DarkSquare from given Matrix
 // Direction 0 means it will iterate every rows
 // Direction 1 means it will iterate every columns
 func MarkersOfMatrix(data ImageMatrix, threshold float64, direction int) []Marker {
 	r, c := data.Dims()
 	markers := []Marker{}
 	startMarker := -1
-	isDarkArea := false
+	isDarkSquare := false
 
 	n := r
 	if direction == 1 {
@@ -62,25 +62,25 @@ func MarkersOfMatrix(data ImageMatrix, threshold float64, direction int) []Marke
 		}
 
 		if colAvg >= threshold {
-			if isDarkArea && startMarker > 0 {
+			if isDarkSquare && startMarker > 0 {
 				markers = append(markers, Marker{
 					Start: startMarker,
 					End:   i,
 				})
 				startMarker = -1
-				isDarkArea = false
+				isDarkSquare = false
 			} else {
 				startMarker = i
 			}
 		} else {
-			isDarkArea = true
+			isDarkSquare = true
 		}
 	}
 
 	return markers
 }
 
-// Scan the DarkArea and return it as []mat64.Dense for each line
+// Scan the DarkSquare and return it as []mat64.Dense for each line
 // And [][]mat64.Dense for each characther
 func LinearScan(data ImageMatrix) ([]ImageMatrix, [][]ImageMatrix) {
 	r, c := data.Dims()
@@ -143,17 +143,17 @@ func LinearScan(data ImageMatrix) ([]ImageMatrix, [][]ImageMatrix) {
 	return lines, charss
 }
 
-func CirucularScan(image ImageMatrix) []*Area {
+func CirucularScan(image ImageMatrix) []*Square {
 	r, c := image.Dims()
 	start := NewCoordinate(0, 0)
-	imageArea := NewArea(start, NewCoordinate(r, c))
-	exploredAreas := []*Area{}
-	resultsArea := []*Area{}
+	imageSquare := NewSquare(start, NewCoordinate(r, c))
+	exploredSquares := []*Square{}
+	resultsSquare := []*Square{}
 
 	for i := 0; i < c; i++ {
 		for j := 0; j < r; j++ {
 			exist := false
-			for _, ea := range exploredAreas {
+			for _, ea := range exploredSquares {
 				if ea.Include(j, i) {
 					exist = true
 					break
@@ -166,21 +166,21 @@ func CirucularScan(image ImageMatrix) []*Area {
 
 			if image.At(j, i) == 0 {
 				coor := NewCoordinate(j, i)
-				result := NewArea(coor, coor)
+				result := NewSquare(coor, coor)
 				vcs := []*Coordinate{}
 
-				circleRun(image, coor, &vcs, imageArea, result)
+				circleRun(image, coor, &vcs, imageSquare, result)
 
-				resultsArea = append(resultsArea, result)
-				exploredAreas = append(exploredAreas, result)
+				resultsSquare = append(resultsSquare, result)
+				exploredSquares = append(exploredSquares, result)
 			}
 		}
 	}
 
-	return resultsArea
+	return resultsSquare
 }
 
-func circleRun(i ImageMatrix, c *Coordinate, vcs *[]*Coordinate, ia, ra *Area) {
+func circleRun(i ImageMatrix, c *Coordinate, vcs *[]*Coordinate, ia, rs *Square) {
 	if c.IsInside(ia) {
 		for _, cs := range *vcs {
 			if c.row == cs.row && c.col == cs.col {
@@ -190,16 +190,16 @@ func circleRun(i ImageMatrix, c *Coordinate, vcs *[]*Coordinate, ia, ra *Area) {
 		*vcs = append(*vcs, c)
 
 		if i.At(c.row, c.col) == 0 {
-			ra.Expand(c)
+			rs.Expand(c)
 
-			circleRun(i, c.N(), vcs, ia, ra)
-			circleRun(i, c.NE(), vcs, ia, ra)
-			circleRun(i, c.E(), vcs, ia, ra)
-			circleRun(i, c.SE(), vcs, ia, ra)
-			circleRun(i, c.S(), vcs, ia, ra)
-			circleRun(i, c.SW(), vcs, ia, ra)
-			circleRun(i, c.W(), vcs, ia, ra)
-			circleRun(i, c.NW(), vcs, ia, ra)
+			circleRun(i, c.N(), vcs, ia, rs)
+			circleRun(i, c.NE(), vcs, ia, rs)
+			circleRun(i, c.E(), vcs, ia, rs)
+			circleRun(i, c.SE(), vcs, ia, rs)
+			circleRun(i, c.S(), vcs, ia, rs)
+			circleRun(i, c.SW(), vcs, ia, rs)
+			circleRun(i, c.W(), vcs, ia, rs)
+			circleRun(i, c.NW(), vcs, ia, rs)
 		}
 	}
 }
