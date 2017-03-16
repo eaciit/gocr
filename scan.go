@@ -3,6 +3,7 @@ package gocr
 import (
 	"bufio"
 	"fmt"
+	"image"
 	"io/ioutil"
 	"log"
 	"math"
@@ -255,6 +256,14 @@ func findTopSquare(s *Square, squares []*Square) (*Square, int) {
 	}
 }
 
+// ================================= Predictor =================================
+
+type Predictor interface {
+	inputWidth() int
+	inputHeight() int
+	Predicts(ImageMatrixs) []string
+}
+
 // ================================= Nearest Neighbor Scanner =================================
 type NNScanner struct {
 	model *Model
@@ -277,31 +286,45 @@ func NewNNScannerFromFile(path string) *NNScanner {
 	}
 }
 
-// Predict using Nearest Neighbor method
-func (s *NNScanner) Predict(matrix ImageMatrix) string {
-	predictedLabel := ""
+func (s *NNScanner) inputHeight() int {
+	r, _ := s.model.ModelImages[0].Data.Dims()
+	return r
+}
+
+func (s *NNScanner) inputWidth() int {
+	_, c := s.model.ModelImages[0].Data.Dims()
+	return c
+}
+
+func (s *NNScanner) Predicts(images ImageMatrixs) []string {
+	predictedLabels := make([]string, len(images))
 	mr, mc := s.model.ModelImages[0].Data.Dims()
-	resizedMatrix := PadAndResize(matrix, mr, mc)
 
-	min := math.MaxFloat64
-	for _, modelImage := range s.model.ModelImages {
-		distance := EuclideanDistance(resizedMatrix, modelImage.Data)
+	for i, image := range images {
+		resizedMatrix := PadAndResize(image, mr, mc)
 
-		fmt.Println(modelImage.Label, distance, " ")
-		if min > distance {
-			min = distance
-			predictedLabel = modelImage.Label
+		min := math.MaxFloat64
+		for _, modelImage := range s.model.ModelImages {
+			distance := EuclideanDistance(resizedMatrix, modelImage.Data)
+
+			fmt.Println(modelImage.Label, distance, " ")
+			if min > distance {
+				min = distance
+				predictedLabels[i] = modelImage.Label
+			}
 		}
 	}
 
-	return predictedLabel
+	return predictedLabels
 }
 
 // ================================= Tensor CNN Scanner =================================
 
 type CNNScanner struct {
-	graph  *tf.Graph
-	labels []string
+	graph       *tf.Graph
+	labels      []string
+	InputHeight int
+	InputWidth  int
 }
 
 func NewCNNScanner(graph *tf.Graph, labels []string) *CNNScanner {
@@ -314,6 +337,14 @@ func NewCNNScanner(graph *tf.Graph, labels []string) *CNNScanner {
 func NewCNNScannerFromDir(dir string) *CNNScanner {
 	graph, labels := loadModel(dir)
 	return NewCNNScanner(graph, labels)
+}
+
+func (s *CNNScanner) inputHeight() int {
+	return s.InputHeight
+}
+
+func (s *CNNScanner) inputWidth() int {
+	return s.InputWidth
 }
 
 func (s *CNNScanner) Predicts(images ImageMatrixs) []string {
@@ -405,4 +436,34 @@ func loadModel(dir string) (*tf.Graph, []string) {
 	}
 
 	return graph, labels
+}
+
+func ScanToStrings(p Predictor, image image.Image) []string {
+	im := ImageToBinaryArray(image)
+	squaress, charss := CirucularScan(im)
+	results := []string{}
+
+	for k, chars := range charss {
+		datas := make([]ImageMatrix, len(chars))
+		for i := 0; i < len(chars); i++ {
+			datas[i] = PadAndResize(chars[i], p.inputHeight(), p.inputWidth())
+		}
+
+		texts := p.Predicts(datas)
+		result := ""
+		for i, text := range texts {
+			if i < len(squaress[k])-1 {
+				if squaress[k][i].NearestHorizontalDistanceTo(squaress[k][i+1]) > float64(squaress[k][i].Width()) {
+					result += text + " "
+					continue
+				}
+			}
+
+			result += text
+		}
+
+		results = append(results, result)
+	}
+
+	return results
 }

@@ -20,6 +20,16 @@ func main() {
 	d, _ := os.Getwd()
 
 	image, _ := gocr.ReadImage(d + "/imagetext_5.png")
+	s := gocr.NewCNNScannerFromDir(modelPath + "tensor_3/")
+	s.InputHeight, s.InputWidth = 64, 64
+
+	fmt.Println(gocr.ScanToStrings(s, image))
+}
+
+func scanAndPrint() {
+	d, _ := os.Getwd()
+
+	image, _ := gocr.ReadImage(d + "/imagetext_5.png")
 	imageMatrix := gocr.ImageToBinaryArray(image)
 	squaress, charss := gocr.CirucularScan(imageMatrix)
 
