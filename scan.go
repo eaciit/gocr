@@ -462,7 +462,7 @@ func ScanToStrings(p Predictor, image image.Image) []string {
 
 		for i, text := range texts {
 			if i < len(squaress[k])-1 {
-				if squaress[k][i].NearestHorizontalDistanceTo(squaress[k][i+1]) > avgDist {
+				if squaress[k][i].NearestHorizontalDistanceTo(squaress[k][i+1]) > avgDist*2 {
 					result += text + " "
 					continue
 				}

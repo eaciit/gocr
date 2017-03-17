@@ -19,7 +19,7 @@ var (
 func main() {
 	d, _ := os.Getwd()
 
-	image, _ := gocr.ReadImage(d + "/imagetext_2.png")
+	image, _ := gocr.ReadImage(d + "/imagetext_3.png")
 	s := gocr.NewCNNPredictorFromDir(modelPath + "tensor_4/")
 	s.InputHeight, s.InputWidth = 64, 64
 
@@ -32,7 +32,7 @@ func main() {
 func scanAndPrint() {
 	d, _ := os.Getwd()
 
-	image, _ := gocr.ReadImage(d + "/imagetext_5.png")
+	image, _ := gocr.ReadImage(d + "/imagetext_3.png")
 	imageMatrix := gocr.ImageToBinaryArray(image)
 	squaress, charss := gocr.CirucularScan(imageMatrix)
 
