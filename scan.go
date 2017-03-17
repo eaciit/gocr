@@ -167,7 +167,7 @@ func CirucularScan(image ImageMatrix) ([][]*Square, [][]ImageMatrix) {
 
 			if image.At(j, i) == 0 {
 				coor := NewCoordinate(j, i)
-				result := NewSquare(coor, coor)
+				result := NewSquare(coor, NewCoordinate(coor.row+1, coor.col+1))
 				vcs := []*Coordinate{}
 
 				circleRun(image, coor, &vcs, imageSquare, result)
@@ -236,11 +236,12 @@ func circleRun(i ImageMatrix, c *Coordinate, vcs *[]*Coordinate, ia, rs *Square)
 
 func findTopSquare(s *Square, squares []*Square) (*Square, int) {
 	m := s.topLeft.col + (s.bottomRight.col-s.topLeft.col)/2
+	a := s.Area() / 2
 	ni := -1
 	nd := float64((s.bottomRight.row - s.topLeft.row)) / 2
 
 	for i := 0; i < len(squares); i++ {
-		if squares[i].topLeft.col < m && m < squares[i].bottomRight.col {
+		if squares[i].topLeft.col < m && m < squares[i].bottomRight.col && squares[i].Area() < a {
 			cd := s.NearestVerticalDistanceTo(squares[i])
 			if nd > cd && cd > 0 {
 				nd = cd

@@ -336,6 +336,10 @@ func NewImageMatrixWithDefaultValue(r, c int, v uint8) ImageMatrix {
 }
 
 func (i ImageMatrix) Dims() (int, int) {
+	if len(i) == 0 {
+		return 0, 0
+	}
+
 	return len(i), len(i[0])
 }
 
