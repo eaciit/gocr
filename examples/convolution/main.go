@@ -19,11 +19,14 @@ var (
 func main() {
 	d, _ := os.Getwd()
 
-	image, _ := gocr.ReadImage(d + "/imagetext_5.png")
-	s := gocr.NewCNNPredictorFromDir(modelPath + "tensor_3/")
+	image, _ := gocr.ReadImage(d + "/imagetext_2.png")
+	s := gocr.NewCNNPredictorFromDir(modelPath + "tensor_4/")
 	s.InputHeight, s.InputWidth = 64, 64
 
-	fmt.Println(gocr.ScanToStrings(s, image))
+	strings := gocr.ScanToStrings(s, image)
+	for _, s := range strings {
+		fmt.Println(s)
+	}
 }
 
 func scanAndPrint() {
