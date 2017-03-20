@@ -79,7 +79,7 @@ func (c *Coordinate) IsInside(s *Square) bool {
 		return false
 	}
 
-	return c.row >= s.topLeft.row && c.col >= s.topLeft.col && c.row <= s.bottomRight.row && c.col <= s.bottomRight.col
+	return c.row >= s.topLeft.row && c.col >= s.topLeft.col && c.row < s.bottomRight.row && c.col < s.bottomRight.col
 }
 
 func (c *Coordinate) DistanceTo(c2 *Coordinate) float64 {
