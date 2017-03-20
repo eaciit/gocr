@@ -456,6 +456,19 @@ func (i ImageMatrix) Col(c int) ImageVector {
 	return v
 }
 
+func (im ImageMatrix) Historgram() []int {
+	hist := make([]int, 256)
+	r, c := im.Dims()
+
+	for i := 0; i < r; i++ {
+		for j := 0; j < c; j++ {
+			hist[im.At(i, j)] += 1
+		}
+	}
+
+	return hist
+}
+
 type ImageMatrixs []ImageMatrix
 
 func (is ImageMatrixs) Average() ImageMatrix {
