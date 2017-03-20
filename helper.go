@@ -6,11 +6,7 @@ import (
 	"image/png"
 	"math"
 	"os"
-
-	"github.com/anthonynsimon/bild/segment"
 )
-
-const THRESHOLD_VALUE = 128
 
 // Read image in given path
 // Can open and decode some type of image (.png, .jpg, .gif)
@@ -53,18 +49,87 @@ func ImageToGraysclaeArray(src image.Image) ImageMatrix {
 	return imageArr
 }
 
-// Convert image to binary array
-func ImageToBinaryArray(src image.Image) ImageMatrix {
-	gray := segment.Threshold(src, THRESHOLD_VALUE)
-	imageArr := NewImageMatrix(gray.Bounds().Max.Y, gray.Bounds().Max.X)
+// Basic Thresholding
+func Threshold(im ImageMatrix, thrs uint8) ImageMatrix {
+	r, c := im.Dims()
+	o := NewImageMatrix(r, c)
 
-	for y := 0; y < gray.Bounds().Max.Y; y++ {
-		for x := 0; x < gray.Bounds().Max.X; x++ {
-			imageArr[y][x] = gray.GrayAt(x, y).Y / 255
+	for i := 0; i < r; i++ {
+		for j := 0; j < c; j++ {
+			if im.At(i, j) >= thrs {
+				o.Set(i, j, 1)
+			} else {
+				o.Set(i, j, 0)
+			}
 		}
 	}
 
-	return imageArr
+	return o
+}
+
+// Thresholding Using Otsu's Method
+func OtsuThresh(im ImageMatrix) ImageMatrix {
+	r, c := im.Dims()
+	hist := im.Historgram()
+	sumAll := 0
+
+	for i := range hist {
+		sumAll += i * hist[i]
+	}
+
+	sumBack, wBack, wFore, varMax, thrs := 0, 0, 0, 0.0, 0
+	total := r * c
+
+	for i := range hist {
+		wBack += hist[i]
+
+		if wBack == 0 {
+			continue
+		}
+
+		wFore = total - wBack
+
+		if wFore == 0 {
+			break
+		}
+
+		sumBack += i * hist[i]
+		mb := float64(sumBack) / float64(wBack)
+		mf := float64(sumAll-sumBack) / float64(wFore)
+
+		vb := float64(wBack*wFore) * math.Pow(mb-mf, 2)
+
+		if vb > varMax {
+			varMax = vb
+			thrs = i
+		}
+	}
+
+	return Threshold(im, uint8(thrs))
+}
+
+func AdaptiveThres(im ImageMatrix, bs int) ImageMatrix {
+	r, c := im.Dims()
+	o := NewImageMatrix(r, c)
+
+	for i := 0; i < r/bs+1; i++ {
+		for j := 0; j < c/bs+1; j++ {
+			br, rc := (i+1)*bs, (j+1)*bs
+
+			if br >= r {
+				br = r - 1
+			}
+
+			if rc >= c {
+				rc = c - 1
+			}
+
+			s := NewSquare(NewCoordinate(i*bs, j*bs), NewCoordinate(br, rc))
+			o.SetSquare(s, OtsuThresh(im.SliceSquare(s)))
+		}
+	}
+
+	return o
 }
 
 // Binarize the given imageArr using

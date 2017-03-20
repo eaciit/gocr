@@ -158,7 +158,7 @@ func Train(sampleFolderPath string, modelPath string) error {
 			return readErr
 		}
 
-		binaryArray := ImageToBinaryArray(image)
+		binaryArray := Threshold(ImageToGraysclaeArray(image), 128)
 
 		model.ModelImages = append(model.ModelImages, ModelImage{
 			Label: elm[1],

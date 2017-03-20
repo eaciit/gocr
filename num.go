@@ -355,6 +355,16 @@ func (i ImageMatrix) Set(r, c int, value uint8) {
 	i[r][c] = value
 }
 
+func (im ImageMatrix) SetSquare(s *Square, si ImageMatrix) {
+	r, c := si.Dims()
+
+	for i := 0; i < r; i++ {
+		for j := 0; j < c; j++ {
+			im[s.topLeft.row+i][s.topLeft.col+j] = si[i][j]
+		}
+	}
+}
+
 func (i ImageMatrix) Slice(sr, er, sc, ec int) ImageMatrix {
 	slice := NewImageMatrix(er-sr, ec-sc)
 

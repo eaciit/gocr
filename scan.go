@@ -440,7 +440,7 @@ func loadModel(dir string) (*tf.Graph, []string) {
 }
 
 func ScanToStrings(p Predictor, image image.Image) []string {
-	im := ImageToBinaryArray(image)
+	im := OtsuThresh(ImageToGraysclaeArray(image))
 	squaress, charss := CirucularScan(im)
 	results := []string{}
 

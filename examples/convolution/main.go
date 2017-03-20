@@ -19,7 +19,8 @@ var (
 func main() {
 	d, _ := os.Getwd()
 
-	image, _ := gocr.ReadImage(d + "/imagetext_3.png")
+	image, _ := gocr.ReadImage(d + "/imagetext_1.png")
+	// gocr.ImageMatrixToImage(gocr.AdaptiveThres(gocr.ImageToGraysclaeArray(image), 24), d+"/test.png", 255)
 	s := gocr.NewCNNPredictorFromDir(modelPath + "tensor_4/")
 	s.InputHeight, s.InputWidth = 64, 64
 
@@ -33,7 +34,7 @@ func scanAndPrint() {
 	d, _ := os.Getwd()
 
 	image, _ := gocr.ReadImage(d + "/imagetext_3.png")
-	imageMatrix := gocr.ImageToBinaryArray(image)
+	imageMatrix := gocr.ImageToGraysclaeArray(image)
 	squaress, charss := gocr.CirucularScan(imageMatrix)
 
 	inputSize := 64
