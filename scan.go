@@ -23,21 +23,6 @@ func (m Marker) thickness() int {
 	return m.End - m.Start
 }
 
-// Read the model from a file and return the Model
-func ReadModel(path string) (Model, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return Model{}, err
-	}
-	defer file.Close()
-
-	decoder := codec.NewDecoder(file, new(codec.CborHandle))
-	model := Model{}
-	decoder.Decode(&model)
-
-	return model, nil
-}
-
 // Find Marker of DarkSquare from given Matrix
 // Direction 0 means it will iterate every rows
 // Direction 1 means it will iterate every columns
@@ -277,7 +262,7 @@ func NewNNPredictor(model *Model) *NNPredictor {
 }
 
 func NewNNPredictorFromFile(path string) *NNPredictor {
-	model, err := ReadModel(path)
+	model, err := readNNModel(path)
 	if err != nil {
 		panic(err)
 	}
@@ -319,6 +304,21 @@ func (p *NNPredictor) Predicts(images ImageMatrixs) []string {
 	return predictedLabels
 }
 
+// Read the model from a file and return the Model
+func readNNModel(path string) (Model, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return Model{}, err
+	}
+	defer file.Close()
+
+	decoder := codec.NewDecoder(file, new(codec.CborHandle))
+	model := Model{}
+	decoder.Decode(&model)
+
+	return model, nil
+}
+
 // ================================= Tensor CNN Predictor =================================
 
 type CNNPredictor struct {
@@ -336,7 +336,7 @@ func NewCNNPredictor(graph *tf.Graph, labels []string) *CNNPredictor {
 }
 
 func NewCNNPredictorFromDir(dir string) *CNNPredictor {
-	graph, labels := loadModel(dir)
+	graph, labels := readCNNModel(dir)
 	return NewCNNPredictor(graph, labels)
 }
 
@@ -408,7 +408,7 @@ func makeTensorFromImage(images ImageMatrixs) (*tf.Tensor, error) {
 	return tensor, nil
 }
 
-func loadModel(dir string) (*tf.Graph, []string) {
+func readCNNModel(dir string) (*tf.Graph, []string) {
 	var (
 		modelFile  = filepath.Join(dir, "model.pb")
 		labelsFile = filepath.Join(dir, "labels.txt")
