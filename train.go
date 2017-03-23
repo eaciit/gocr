@@ -166,7 +166,7 @@ func Train(sampleFolderPath string, modelPath string) error {
 		})
 	}
 
-	modelFile, err := os.Create(modelPath + "model.gob")
+	modelFile, err := os.Create(modelPath + "model.cbor")
 	if err != nil {
 		return err
 	}
