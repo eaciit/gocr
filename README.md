@@ -48,16 +48,16 @@ B1.gif,B
 
 Train the sample data to model and scan image
 ```go
-// Load the sample data and save it in .gob file
 d, _ := os.Getwd()
 
+// Load the sample data and save it in model.cbor file
 err := gocr.TrainAverage(d+"/English/Fnt/", d+"/English/")
 if err != nil {
   panic(err)
 }
 
 image, _ := gocr.ReadImage(d + "/imagetext_3.png")
-s := gocr.NewCNNPredictorFromDir(modelPath + "sample1/")
+s := gocr.NewCNNPredictorFromDir(modelPath + "sample1/model.cbor")
 
 strings := gocr.ScanToStrings(s, image)
 for _, s := range strings {
