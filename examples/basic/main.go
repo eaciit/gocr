@@ -35,7 +35,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	im := gocr.ImageToBinaryArray(image)
+
+	im := gocr.ImageToGraysclaeArray(image)
 	gocr.ImageMatrixToImage(im, d+"/result/image.png", 255)
 
 }
