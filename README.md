@@ -1,9 +1,42 @@
 # gocr
 gocr is a go based OCR module
 
+## Available Scanner
+* Linear Mean Scanner
+* Circular Scanner (Currently the best)
+
+## Available predictor
+* NNPredictor (kNN with k = 1)
+* CNNPredictor (Need to install tensorflow first) (Doesn't upport custom train)
+
+## Future Improvement
+* Sauvola Segmentation
+* Better character detection
+* Better symbol detection
+* Spelling Correction
+
 # How to use
-## Train Data
-To use OCR a trained model need to be build first using Train method. Train read sample of many files from a path. These path will contain many image file with only 2 colors (black over white) and an index file (index.csv) which contains key value to identify file name and characted represent by the file
+
+To use OCR we have some generated Model that we train using tensorflow. We use Convolutional Neural Network as the model architecture and produce good detection.
+
+You can load and use the model to `CNN Predictor` like this example below:
+
+```go
+d, _ := os.Getwd()
+
+image, _ := gocr.ReadImage(d + "/imagetext_3.png")
+s := gocr.NewCNNPredictorFromDir(modelPath + "tensor_4/")
+
+// Define the image size
+s.InputHeight, s.InputWidth = 64, 64
+
+strings := gocr.ScanToStrings(s, image)
+for _, s := range strings {
+  fmt.Println(s)
+}
+```
+
+However you can also use your own train data. Currently the predictor that support custom training only `NNPredictor`. Training takes `csv` file that have file image path and string representation.
 
 ie:
 ```
@@ -13,26 +46,25 @@ A1.gif,A
 B1.gif,B
 ```
 
+Train the sample data to model and scan image
 ```go
-pathOfSample := "/usr/eaciit/go/src/github.com/eaciit/gocr/sample"
-pathOfTrainedModel := "/usr/eaciit/go/src/github.com/eaciit/gocr/trainedmodel"
-ocr := new Ocr()
-if trainResult, err := ocr.Train(pathOfSample, pathOfTrainedModel); err!=nil {
-  fmt.Println("Error :" + err.Error())
-} else {
-  fmt.Prinln("Trained ",trainResult)
+// Load the sample data and save it in .gob file
+d, _ := os.Getwd()
+
+err := gocr.TrainAverage(d+"/English/Fnt/", d+"/English/")
+if err != nil {
+  panic(err)
 }
+
+image, _ := gocr.ReadImage(d + "/imagetext_3.png")
+s := gocr.NewCNNPredictorFromDir(modelPath + "sample1/")
+
+strings := gocr.ScanToStrings(s, image)
+for _, s := range strings {
+  fmt.Println(s)
+}
+
 ```
 
-## Scan based on Trained Model
-```go
-pathOfTrainedModel := "/usr/eaciit/go/src/github.com/eaciit/gocr/trainedmodel"
-ocr := new Ocr()
-ocr.TrainedModel = pathOfTrainedModel
-if scanResult, err := ocr.Scan("/usr/eaciit/doc1.pdf"); err!=nil {
-  fmt.Println("Error :" + err.Error())
-} else {
-  fmt.Prinln("Scanned: ",scanResult)
-}
-```
-
+# License
+gocr is released under the Apache 2.0 License. se LICENSE for details.
