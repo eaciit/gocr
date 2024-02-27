@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	tf "github.com/tensorflow/tensorflow/tensorflow/go"
+	tf "github.com/galeone/tensorflow/tensorflow/go"
 	"github.com/ugorji/go/codec"
 )
 
